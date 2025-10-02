@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -60,6 +60,12 @@ const Index = () => {
     downloadPowerPoint,
     startExtraction
   } = useExtraction();
+
+  // Enable dark mode by default
+  useEffect(() => {
+    document.documentElement.classList.add('dark');
+    document.body.classList.add('dark');
+  }, []);
 
   const validateJamaUrl = (url: string) => {
     if (!url) return true; // Allow empty for validation display
@@ -144,32 +150,56 @@ const Index = () => {
   };
 
   // Convert currentStep to processing steps for display
-  const processingSteps = currentStep > 0 ? [
-    { id: '1', name: 'Scraping Article', status: currentStep > 1 ? 'completed' : currentStep === 1 ? 'processing' : 'pending' as const, message: currentStep > 1 ? 'Successfully extracted article content' : 'Extracting content from JAMA article...', timestamp: new Date().toISOString() },
-    { id: '2', name: 'Parsing Data', status: currentStep > 2 ? 'completed' : currentStep === 2 ? 'processing' : 'pending' as const, message: currentStep > 2 ? 'Successfully parsed extracted content' : 'Parsing medical data from content...', timestamp: new Date().toISOString() },
-    { id: '3', name: 'Summarizing Findings', status: currentStep > 3 ? 'completed' : currentStep === 3 ? 'processing' : 'pending' as const, message: currentStep > 3 ? 'Successfully generated AI summary' : 'Generating AI summary...', timestamp: new Date().toISOString() },
-    { id: '4', name: 'Generating PowerPoint', status: currentStep > 4 ? 'completed' : currentStep === 4 ? 'processing' : 'pending' as const, message: currentStep > 4 ? 'Successfully created presentation' : 'Creating VA-style presentation...', timestamp: new Date().toISOString() }
+  const processingSteps: ProcessingStep[] = currentStep > 0 ? [
+    { 
+      id: '1', 
+      name: 'Scraping Article', 
+      status: (currentStep > 1 ? 'completed' : currentStep === 1 ? 'processing' : 'pending') as 'pending' | 'processing' | 'completed' | 'error', 
+      message: currentStep > 1 ? 'Successfully extracted article content' : 'Extracting content from JAMA article...', 
+      timestamp: new Date().toISOString() 
+    },
+    { 
+      id: '2', 
+      name: 'Parsing Data', 
+      status: (currentStep > 2 ? 'completed' : currentStep === 2 ? 'processing' : 'pending') as 'pending' | 'processing' | 'completed' | 'error', 
+      message: currentStep > 2 ? 'Successfully parsed extracted content' : 'Parsing medical data from content...', 
+      timestamp: new Date().toISOString() 
+    },
+    { 
+      id: '3', 
+      name: 'Summarizing Findings', 
+      status: (currentStep > 3 ? 'completed' : currentStep === 3 ? 'processing' : 'pending') as 'pending' | 'processing' | 'completed' | 'error', 
+      message: currentStep > 3 ? 'Successfully generated AI summary' : 'Generating AI summary...', 
+      timestamp: new Date().toISOString() 
+    },
+    { 
+      id: '4', 
+      name: 'Generating PowerPoint', 
+      status: (currentStep > 4 ? 'completed' : currentStep === 4 ? 'processing' : 'pending') as 'pending' | 'processing' | 'completed' | 'error', 
+      message: currentStep > 4 ? 'Successfully created presentation' : 'Creating VA-style presentation...', 
+      timestamp: new Date().toISOString() 
+    }
   ] : [];
   
   const isComplete = currentStep === 5; // All steps completed
   const hasError = !!error;
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen dark">
       {/* Header with gradient background */}
       <header className="relative overflow-hidden">
-        <div className="absolute inset-0 gradient-bg opacity-10"></div>
-        <div className="glass-card border-0 border-b backdrop-blur-xl">
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 opacity-80"></div>
+        <div className="glass-card border-0 border-b backdrop-blur-xl relative z-10">
           <div className="container mx-auto px-6 py-8">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center float-animation">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl flex items-center justify-center float-animation shadow-lg">
                 <FileText className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                   JAMA VA Abstractor
                 </h1>
-                <p className="text-sm text-muted-foreground mt-1 font-medium">
+                <p className="text-sm text-slate-300 mt-1 font-medium">
                   AI-powered VA-style presentation generator for medical research articles
                 </p>
               </div>
@@ -187,7 +217,7 @@ const Index = () => {
             <Card className="glass-card card-hover border-0 shadow-lg">
               <CardContent className="pt-8 pb-8 px-8 space-y-6">
                 <div className="space-y-3">
-                  <label htmlFor="article-url" className="text-base font-semibold text-foreground flex items-center space-x-2">
+                  <label htmlFor="article-url" className="text-base font-semibold text-slate-200 flex items-center space-x-2">
                     <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
                     <span>JAMA Article URL</span>
                   </label>
@@ -198,10 +228,10 @@ const Index = () => {
                     value={articleUrl}
                     onChange={(e) => setArticleUrl(e.target.value)}
                     disabled={isExtracting || !!uploadedFile}
-                    className={`h-12 px-4 text-base border-0 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl shadow-inner transition-all duration-200 focus:from-blue-50 focus:to-indigo-50 focus:shadow-md ${
+                    className={`h-12 px-4 text-base border-0 bg-gradient-to-r from-slate-800 to-slate-700 text-slate-200 rounded-xl shadow-inner transition-all duration-200 focus:from-slate-700 focus:to-slate-600 focus:shadow-md placeholder:text-slate-400 ${
                       articleUrl && !validateJamaUrl(articleUrl) 
-                        ? "from-red-50 to-rose-50 ring-2 ring-red-300" 
-                        : "focus:ring-2 focus:ring-blue-300"
+                        ? "from-red-900 to-rose-800 ring-2 ring-red-400" 
+                        : "focus:ring-2 focus:ring-blue-400"
                     }`}
                   />
                   {articleUrl && !validateJamaUrl(articleUrl) && (
@@ -216,32 +246,32 @@ const Index = () => {
 
                 <div className="relative my-8">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+                    <div className="w-full h-px bg-gradient-to-r from-transparent via-slate-600 to-transparent"></div>
                   </div>
                   <div className="relative flex justify-center">
-                    <span className="bg-white px-4 py-2 text-sm font-medium text-slate-500 rounded-full shadow-sm border border-slate-200">
+                    <span className="bg-slate-800 px-4 py-2 text-sm font-medium text-slate-300 rounded-full shadow-sm border border-slate-600">
                       OR
                     </span>
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-base font-semibold text-foreground mb-3 flex items-center space-x-2">
+                  <label className="text-base font-semibold text-slate-200 mb-3 flex items-center space-x-2">
                     <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
                     <span>Upload PDF</span>
                   </label>
                   {uploadedFile ? (
-                    <div className="border-0 rounded-xl p-5 bg-gradient-to-r from-green-50 to-emerald-50 shadow-md">
+                    <div className="border-0 rounded-xl p-5 bg-gradient-to-r from-green-900 to-emerald-900 shadow-md border border-green-700">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
                             <FileText className="w-6 h-6 text-white" />
                           </div>
                           <div>
-                            <p className="text-base font-semibold text-foreground">
+                            <p className="text-base font-semibold text-slate-200">
                               {uploadedFile.name}
                             </p>
-                            <p className="text-sm text-green-600 font-medium">
+                            <p className="text-sm text-green-400 font-medium">
                               {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB • Ready to process
                             </p>
                           </div>
@@ -251,7 +281,7 @@ const Index = () => {
                           size="sm"
                           onClick={() => setUploadedFile(null)}
                           disabled={isExtracting}
-                          className="border-green-200 text-green-700 hover:bg-green-100 rounded-lg px-4 py-2 font-medium"
+                          className="border-green-600 text-green-400 hover:bg-green-800 rounded-lg px-4 py-2 font-medium"
                         >
                           Remove
                         </Button>
@@ -351,7 +381,7 @@ const Index = () => {
             
             {/* Processing Info */}
             {!isComplete && !hasError && processingSteps.length === 0 && (
-              <Card className="glass-card border-0 shadow-lg bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 card-hover">
+              <Card className="glass-card border-0 shadow-lg bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800 card-hover border border-slate-600">
                 <CardContent className="pt-8 pb-8 px-8">
                   <div className="text-center space-y-6">
                     <div className="relative">
@@ -362,15 +392,15 @@ const Index = () => {
                     </div>
                     
                     <div>
-                      <h3 className="text-xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
+                      <h3 className="text-xl font-bold bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent mb-2">
                         Ready to Transform Research
                       </h3>
-                      <p className="text-sm text-blue-700 leading-relaxed">
+                      <p className="text-sm text-slate-300 leading-relaxed">
                         Upload a medical research article or enter a JAMA URL to generate your professional VA-style presentation.
                       </p>
                     </div>
 
-                    <div className="flex items-center justify-center space-x-6 text-xs text-blue-600">
+                    <div className="flex items-center justify-center space-x-6 text-xs text-slate-400">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
                         <span>AI-Powered</span>

@@ -43,12 +43,12 @@ export const FileUploadZone = ({ onFileSelect }: FileUploadZoneProps) => {
       className={cn(
         "relative border-2 border-dashed rounded-xl p-10 text-center transition-all duration-300 group cursor-pointer overflow-hidden",
         isDragging
-          ? "border-primary bg-gradient-to-br from-blue-50 to-indigo-50 scale-105 shadow-lg"
-          : "border-border bg-gradient-to-br from-slate-50 to-slate-100 hover:border-primary/60 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50 hover:scale-102"
+          ? "border-primary bg-gradient-to-br from-slate-800 to-slate-700 scale-105 shadow-lg"
+          : "border-slate-600 bg-gradient-to-br from-slate-800 to-slate-900 hover:border-primary/60 hover:bg-gradient-to-br hover:from-slate-700 hover:to-slate-800 hover:scale-102"
       )}
     >
       {/* Background animation */}
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 to-purple-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       
       {/* Upload icon with animation */}
       <div className="relative z-10">
@@ -56,16 +56,16 @@ export const FileUploadZone = ({ onFileSelect }: FileUploadZoneProps) => {
           "w-16 h-16 mx-auto mb-4 rounded-xl flex items-center justify-center transition-all duration-300",
           isDragging 
             ? "bg-gradient-to-br from-blue-400 to-indigo-500 text-white scale-110 shadow-lg" 
-            : "bg-gradient-to-br from-slate-200 to-slate-300 text-slate-600 group-hover:from-blue-400 group-hover:to-indigo-500 group-hover:text-white group-hover:scale-110"
+            : "bg-gradient-to-br from-slate-600 to-slate-700 text-slate-300 group-hover:from-blue-400 group-hover:to-indigo-500 group-hover:text-white group-hover:scale-110"
         )}>
           <Upload className="w-8 h-8" />
         </div>
         
         <div className="space-y-2">
-          <p className="text-base font-medium text-foreground">
+          <p className="text-base font-medium text-slate-200">
             Drag and drop your PDF here
           </p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-slate-400">
             or
           </p>
           <label className="inline-block">
@@ -81,7 +81,7 @@ export const FileUploadZone = ({ onFileSelect }: FileUploadZoneProps) => {
           </label>
         </div>
         
-        <div className="mt-4 flex items-center justify-center space-x-2 text-xs text-muted-foreground">
+        <div className="mt-4 flex items-center justify-center space-x-2 text-xs text-slate-400">
           <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
           <span>PDF files only</span>
           <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
