@@ -51,11 +51,12 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        medical: {
-          blue: "hsl(var(--medical-blue))",
-          green: "hsl(var(--medical-green))",
-          red: "hsl(var(--medical-red))",
-          gray: "hsl(var(--medical-gray))",
+        research: {
+          blue: "hsl(var(--research-blue))",
+          gray: "hsl(var(--research-gray))",
+        },
+        log: {
+          bg: "hsl(var(--log-bg))",
         },
       },
       borderRadius: {
@@ -117,6 +118,30 @@ export default {
         "slide-in": "slide-in 0.5s ease-out",
         "flip-in": "flip-in 0.6s ease-out",
         "pulse-gentle": "pulse-gentle 2s ease-in-out infinite",
+        "shake": "shake 0.5s ease-in-out",
+        "bounce-once": "bounce-once 0.6s ease-out",
+        "slide-in-right": "slide-in-right 0.5s ease-out",
+      },
+      keyframes: {
+        shake: {
+          "0%, 100%": { transform: "translateX(0)" },
+          "10%, 30%, 50%, 70%, 90%": { transform: "translateX(-4px)" },
+          "20%, 40%, 60%, 80%": { transform: "translateX(4px)" },
+        },
+        "bounce-once": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-10px)" },
+        },
+        "slide-in-right": {
+          "0%": {
+            opacity: "0",
+            transform: "translateX(100%)",
+          },
+          "100%": {
+            opacity: "1",
+            transform: "translateX(0)",
+          },
+        },
       },
     },
   },

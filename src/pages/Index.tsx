@@ -1,8 +1,13 @@
 import { useState } from "react";
-import { InputCard } from "@/components/InputCard";
-import { StatusCard } from "@/components/StatusCard";
-import { ResultsCard } from "@/components/ResultsCard";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { LogPanel } from "@/components/LogPanel";
+import { OutputPanel } from "@/components/OutputPanel";
+import { FileUploadZone } from "@/components/FileUploadZone";
+import { FileText, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Separator } from "@/components/ui/separator";
 
 type StepStatus = "pending" | "active" | "completed" | "error";
 
@@ -26,6 +31,7 @@ const Index = () => {
     generating: "pending",
   });
   const [isComplete, setIsComplete] = useState(false);
+  const [showLogs, setShowLogs] = useState(false);
 
   const steps = [
     { key: "scraping" as const, title: "Scraping Article" },
@@ -37,6 +43,7 @@ const Index = () => {
   const simulateProcess = async () => {
     setIsProcessing(true);
     setIsComplete(false);
+    setShowLogs(true);
 
     for (const step of steps) {
       setProcessState((prev) => ({ ...prev, [step.key]: "active" }));
@@ -103,32 +110,103 @@ const Index = () => {
       {/* Header */}
       <header className="border-b bg-card shadow-sm">
         <div className="container mx-auto px-6 py-6">
-          <h1 className="text-3xl font-bold text-foreground">Graphical Abstract Generator</h1>
+          <h1 className="text-2xl font-bold text-foreground">Research Assistant</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Convert JAMA clinical trials into VA-format summaries
+            AI-powered graphical abstract generator for clinical trials
           </p>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-6 py-12">
-        <div className="max-w-4xl mx-auto space-y-8">
-          {/* Input Card */}
-          <InputCard
-            articleUrl={articleUrl}
-            onUrlChange={setArticleUrl}
-            uploadedFile={uploadedFile}
-            onFileSelect={setUploadedFile}
-            onFileRemove={() => setUploadedFile(null)}
-            onGenerate={handleGenerate}
-            isProcessing={isProcessing}
-          />
+      {/* Main Layout */}
+      <main className="container mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Input & Logs */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Input Section */}
+            <Card>
+              <CardContent className="pt-6 space-y-4">
+                <div className="space-y-2">
+                  <label htmlFor="article-url" className="text-sm font-medium text-foreground">
+                    Article URL
+                  </label>
+                  <Input
+                    id="article-url"
+                    type="url"
+                    placeholder="https://jamanetwork.com/journals/jama/article/..."
+                    value={articleUrl}
+                    onChange={(e) => setArticleUrl(e.target.value)}
+                    disabled={isProcessing || !!uploadedFile}
+                  />
+                </div>
 
-          {/* Status Card - Only show when processing */}
-          {isProcessing && <StatusCard processState={processState} />}
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <Separator />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">Or</span>
+                  </div>
+                </div>
 
-          {/* Results Card - Slide in when complete */}
-          {isComplete && <ResultsCard onDownload={handleDownload} />}
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">
+                    Upload PDF
+                  </label>
+                  {uploadedFile ? (
+                    <div className="border rounded-lg p-4 bg-muted/50">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <FileText className="w-6 h-6 text-primary" />
+                          <div>
+                            <p className="text-sm font-medium text-foreground">
+                              {uploadedFile.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setUploadedFile(null)}
+                          disabled={isProcessing}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <FileUploadZone onFileSelect={setUploadedFile} />
+                  )}
+                </div>
+
+                <Button
+                  onClick={handleGenerate}
+                  disabled={isProcessing || (!articleUrl && !uploadedFile)}
+                  className="w-full"
+                  size="lg"
+                >
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    "Generate Abstract"
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Log Panel - Expands down when processing starts */}
+            <LogPanel processState={processState} isExpanded={showLogs} />
+          </div>
+
+          {/* Right Column - Output Panel */}
+          <div className="lg:col-span-1">
+            <OutputPanel isVisible={isComplete} onDownload={handleDownload} />
+          </div>
         </div>
       </main>
     </div>

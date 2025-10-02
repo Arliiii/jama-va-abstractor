@@ -8,78 +8,79 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Medical teal theme */
-    --background: 210 20% 98%;
-    --foreground: 215 25% 27%;
+    /* Professional research tool theme - gray/blue */
+    --background: 220 15% 97%;
+    --foreground: 220 20% 20%;
 
     --card: 0 0% 100%;
-    --card-foreground: 215 25% 27%;
+    --card-foreground: 220 20% 20%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 27%;
+    --popover-foreground: 220 20% 20%;
 
-    --primary: 180 65% 45%;
+    --primary: 215 75% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 195 55% 95%;
-    --secondary-foreground: 215 25% 27%;
+    --secondary: 220 15% 92%;
+    --secondary-foreground: 220 20% 20%;
 
-    --muted: 210 20% 95%;
-    --muted-foreground: 215 15% 50%;
+    --muted: 220 15% 95%;
+    --muted-foreground: 220 15% 45%;
 
-    --accent: 195 85% 92%;
-    --accent-foreground: 180 65% 35%;
+    --accent: 215 85% 96%;
+    --accent-foreground: 215 75% 40%;
 
-    --destructive: 0 70% 55%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 145 65% 45%;
+    --success: 145 60% 45%;
     --success-foreground: 0 0% 100%;
 
-    --border: 210 20% 88%;
-    --input: 210 20% 88%;
-    --ring: 180 65% 45%;
+    --border: 220 15% 88%;
+    --input: 220 15% 88%;
+    --ring: 215 75% 50%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
-    /* Medical-specific tokens */
-    --medical-blue: 195 75% 50%;
-    --medical-green: 145 65% 45%;
-    --medical-red: 0 70% 55%;
-    --medical-gray: 215 15% 50%;
+    /* Research tool specific tokens */
+    --research-blue: 215 75% 50%;
+    --research-gray: 220 15% 60%;
+    --log-bg: 220 15% 98%;
   }
 
   .dark {
-    --background: 215 30% 8%;
-    --foreground: 210 20% 98%;
+    --background: 220 25% 10%;
+    --foreground: 220 15% 95%;
 
-    --card: 215 25% 12%;
-    --card-foreground: 210 20% 98%;
+    --card: 220 20% 13%;
+    --card-foreground: 220 15% 95%;
 
-    --popover: 215 25% 12%;
-    --popover-foreground: 210 20% 98%;
+    --popover: 220 20% 13%;
+    --popover-foreground: 220 15% 95%;
 
-    --primary: 180 65% 55%;
-    --primary-foreground: 215 30% 8%;
+    --primary: 215 75% 60%;
+    --primary-foreground: 220 25% 10%;
 
-    --secondary: 215 25% 18%;
-    --secondary-foreground: 210 20% 98%;
+    --secondary: 220 20% 18%;
+    --secondary-foreground: 220 15% 95%;
 
-    --muted: 215 25% 18%;
-    --muted-foreground: 215 15% 65%;
+    --muted: 220 20% 18%;
+    --muted-foreground: 220 15% 60%;
 
-    --accent: 180 65% 20%;
-    --accent-foreground: 180 65% 85%;
+    --accent: 215 75% 25%;
+    --accent-foreground: 215 75% 85%;
 
-    --destructive: 0 70% 50%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 145 65% 45%;
+    --success: 145 60% 45%;
     --success-foreground: 0 0% 100%;
 
-    --border: 215 25% 18%;
-    --input: 215 25% 18%;
-    --ring: 180 65% 55%;
+    --border: 220 20% 18%;
+    --input: 220 20% 18%;
+    --ring: 215 75% 60%;
+
+    --log-bg: 220 25% 12%;
   }
 }
 
