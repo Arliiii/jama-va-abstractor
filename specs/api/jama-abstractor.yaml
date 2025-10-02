@@ -1,0 +1,675 @@
+openapi: 3.0.3
+info:
+  title: JAMA VA Abstractor API
+  description: API for extracting key details from JAMA articles and generating VA-style graphical abstracts
+  version: 1.0.0
+  contact:
+    name: JAMA VA Abstractor Team
+    email: support@jama-va-abstractor.com
+
+servers:
+  - url: http://localhost:3000/api
+    description: Development server
+  - url: https://api.jama-va-abstractor.com
+    description: Production server
+
+paths:
+  /extract/url:
+    post:
+      summary: Extract article details from JAMA URL
+      description: Extracts population, intervention, setting, outcome, and findings from a JAMA article URL
+      tags:
+        - Article Extraction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: Valid JAMA article URL
+                  example: "https://jamanetwork.com/journals/jama/fullarticle/123456"
+                options:
+                  type: object
+                  properties:
+                    includeReferences:
+                      type: boolean
+                      default: false
+                      description: Whether to include article references
+                    extractImages:
+                      type: boolean
+                      default: false
+                      description: Whether to extract images from the article
+              required:
+                - url
+      responses:
+        '200':
+          description: Successfully extracted article details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleExtraction'
+        '400':
+          description: Invalid URL provided
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Article not found or not accessible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Extraction failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /extract/pdf:
+    post:
+      summary: Extract article details from uploaded PDF
+      description: Extracts key details from an uploaded PDF file
+      tags:
+        - Article Extraction
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: PDF file to process (max 10MB)
+                options:
+                  type: object
+                  properties:
+                    language:
+                      type: string
+                      enum: [en, es, fr, de]
+                      default: en
+                      description: Language for OCR processing
+                    ocrMode:
+                      type: string
+                      enum: [auto, force, skip]
+                      default: auto
+                      description: OCR processing mode
+              required:
+                - file
+      responses:
+        '200':
+          description: Successfully extracted PDF details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleExtraction'
+        '400':
+          description: Invalid file format or corrupted PDF
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: File too large (max 10MB)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: PDF processing failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error during processing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /generate/abstract:
+    post:
+      summary: Generate VA-style PowerPoint abstract
+      description: Creates a PowerPoint presentation with VA-style graphical abstract from extracted article data
+      tags:
+        - Abstract Generation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                extractionId:
+                  type: string
+                  description: ID of the article extraction to use
+                  example: "ext_123456789"
+                customData:
+                  $ref: '#/components/schemas/ArticleData'
+                template:
+                  type: string
+                  enum: [standard, clinical, research, review]
+                  default: standard
+                  description: PowerPoint template style
+                branding:
+                  type: object
+                  properties:
+                    logo:
+                      type: string
+                      description: Base64 encoded logo image
+                    institution:
+                      type: string
+                      description: Institution name
+                    colors:
+                      type: object
+                      properties:
+                        primary:
+                          type: string
+                          pattern: '^#[0-9A-Fa-f]{6}$'
+                          example: '#1f4e79'
+                        secondary:
+                          type: string
+                          pattern: '^#[0-9A-Fa-f]{6}$'
+                          example: '#4472c4'
+              anyOf:
+                - required: [extractionId]
+                - required: [customData]
+      responses:
+        '200':
+          description: Successfully generated PowerPoint abstract
+          content:
+            application/vnd.openxmlformats-officedocument.presentationml.presentation:
+              schema:
+                type: string
+                format: binary
+                description: Generated PowerPoint file
+            application/json:
+              schema:
+                type: object
+                properties:
+                  downloadUrl:
+                    type: string
+                    format: uri
+                    description: URL to download the generated PowerPoint file
+                  expiresAt:
+                    type: string
+                    format: date-time
+                    description: Expiration time for the download URL
+                  fileSize:
+                    type: integer
+                    description: File size in bytes
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Extraction ID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: PowerPoint generation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /extractions/{id}:
+    get:
+      summary: Get extraction details by ID
+      description: Retrieves previously extracted article data
+      tags:
+        - Article Extraction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Extraction ID
+          example: "ext_123456789"
+      responses:
+        '200':
+          description: Extraction details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleExtraction'
+        '404':
+          description: Extraction not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /extractions:
+    get:
+      summary: List recent extractions
+      description: Get a list of recent article extractions
+      tags:
+        - Article Extraction
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+          description: Number of extractions to return
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: Number of extractions to skip
+      responses:
+        '200':
+          description: List of extractions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  extractions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ExtractionSummary'
+                  total:
+                    type: integer
+                    description: Total number of extractions
+                  hasMore:
+                    type: boolean
+                    description: Whether there are more results
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    ArticleExtraction:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique extraction ID
+          example: "ext_123456789"
+        createdAt:
+          type: string
+          format: date-time
+          description: When the extraction was created
+        source:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [url, pdf]
+              description: Source type
+            url:
+              type: string
+              format: uri
+              description: Original URL (if applicable)
+            filename:
+              type: string
+              description: Original filename (if uploaded)
+            fileSize:
+              type: integer
+              description: File size in bytes (if uploaded)
+        data:
+          $ref: '#/components/schemas/ArticleData'
+        confidence:
+          type: object
+          description: Confidence scores for extracted data
+          properties:
+            overall:
+              type: number
+              minimum: 0
+              maximum: 1
+              description: Overall extraction confidence
+            population:
+              type: number
+              minimum: 0
+              maximum: 1
+            intervention:
+              type: number
+              minimum: 0
+              maximum: 1
+            setting:
+              type: number
+              minimum: 0
+              maximum: 1
+            outcome:
+              type: number
+              minimum: 0
+              maximum: 1
+            findings:
+              type: number
+              minimum: 0
+              maximum: 1
+        processingTime:
+          type: number
+          description: Processing time in seconds
+      required:
+        - id
+        - createdAt
+        - source
+        - data
+
+    ArticleData:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Article title
+          example: "Effects of Digital Health Interventions on Cardiovascular Risk Factors"
+        authors:
+          type: array
+          items:
+            type: string
+          description: List of authors
+          example: ["Smith, J.", "Johnson, M.", "Williams, R."]
+        journal:
+          type: string
+          description: Journal name
+          example: "JAMA Internal Medicine"
+        publicationDate:
+          type: string
+          format: date
+          description: Publication date
+        doi:
+          type: string
+          description: Digital Object Identifier
+          example: "10.1001/jamainternmed.2023.1234"
+        population:
+          type: object
+          properties:
+            description:
+              type: string
+              description: Population description
+              example: "Adults aged 18-65 with hypertension"
+            size:
+              type: integer
+              description: Sample size
+              example: 2450
+            demographics:
+              type: object
+              properties:
+                age:
+                  type: object
+                  properties:
+                    mean:
+                      type: number
+                      example: 52.3
+                    range:
+                      type: string
+                      example: "18-65"
+                gender:
+                  type: object
+                  properties:
+                    male:
+                      type: number
+                      description: Percentage male
+                      example: 48.2
+                    female:
+                      type: number
+                      description: Percentage female
+                      example: 51.8
+                ethnicity:
+                  type: object
+                  additionalProperties:
+                    type: number
+                  example:
+                    white: 65.3
+                    black: 18.7
+                    hispanic: 12.4
+                    other: 3.6
+          required:
+            - description
+        intervention:
+          type: object
+          properties:
+            type:
+              type: string
+              description: Type of intervention
+              example: "Digital health app"
+            description:
+              type: string
+              description: Detailed intervention description
+              example: "Mobile application providing daily blood pressure monitoring, medication reminders, and lifestyle coaching"
+            duration:
+              type: string
+              description: Intervention duration
+              example: "12 weeks"
+            control:
+              type: string
+              description: Control group description
+              example: "Standard care with quarterly clinic visits"
+          required:
+            - type
+            - description
+        setting:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [clinical, community, home, hospital, primary_care, specialty_care, remote]
+              description: Setting type
+              example: "community"
+            description:
+              type: string
+              description: Setting description
+              example: "Community health centers in urban areas"
+            location:
+              type: string
+              description: Geographic location
+              example: "Boston, MA"
+            institutions:
+              type: array
+              items:
+                type: string
+              description: Participating institutions
+              example: ["Boston Medical Center", "Massachusetts General Hospital"]
+          required:
+            - type
+            - description
+        outcome:
+          type: object
+          properties:
+            primary:
+              type: array
+              items:
+                type: object
+                properties:
+                  measure:
+                    type: string
+                    description: Primary outcome measure
+                  description:
+                    type: string
+                    description: Detailed description
+                  timepoint:
+                    type: string
+                    description: When measured
+                required:
+                  - measure
+              example:
+                - measure: "Systolic blood pressure reduction"
+                  description: "Change from baseline in systolic BP"
+                  timepoint: "12 weeks"
+            secondary:
+              type: array
+              items:
+                type: object
+                properties:
+                  measure:
+                    type: string
+                  description:
+                    type: string
+                  timepoint:
+                    type: string
+                required:
+                  - measure
+              example:
+                - measure: "Medication adherence"
+                  description: "Self-reported medication compliance"
+                  timepoint: "4, 8, 12 weeks"
+          required:
+            - primary
+        findings:
+          type: object
+          properties:
+            keyResults:
+              type: array
+              items:
+                type: string
+              description: Key study findings
+              example:
+                - "Mean systolic BP decreased by 8.5 mmHg (95% CI: 6.2-10.8) in intervention group"
+                - "No significant difference in medication adherence between groups"
+            statisticalSignificance:
+              type: object
+              properties:
+                pValue:
+                  type: number
+                  description: P-value for primary outcome
+                  example: 0.003
+                confidenceInterval:
+                  type: string
+                  description: Confidence interval
+                  example: "95% CI: 6.2-10.8"
+            clinicalSignificance:
+              type: string
+              description: Clinical significance assessment
+              example: "Clinically meaningful reduction in cardiovascular risk"
+            limitations:
+              type: array
+              items:
+                type: string
+              description: Study limitations
+              example:
+                - "Single-blind design"
+                - "Short follow-up period"
+                - "High dropout rate in control group"
+            conclusions:
+              type: string
+              description: Authors' conclusions
+              example: "Digital health interventions significantly reduce blood pressure in community settings"
+          required:
+            - keyResults
+        abstract:
+          type: string
+          description: Original article abstract
+        keywords:
+          type: array
+          items:
+            type: string
+          description: Article keywords
+          example: ["digital health", "hypertension", "mobile app", "cardiovascular"]
+      required:
+        - title
+        - population
+        - intervention
+        - setting
+        - outcome
+        - findings
+
+    ExtractionSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "ext_123456789"
+        createdAt:
+          type: string
+          format: date-time
+        title:
+          type: string
+          example: "Effects of Digital Health Interventions on Cardiovascular Risk Factors"
+        source:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [url, pdf]
+            filename:
+              type: string
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Overall extraction confidence
+      required:
+        - id
+        - createdAt
+        - title
+        - source
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error type
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: string
+          description: Additional error details
+        code:
+          type: integer
+          description: Error code
+        timestamp:
+          type: string
+          format: date-time
+          description: When the error occurred
+      required:
+        - error
+        - message
+        - timestamp
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - ApiKeyAuth: []
+  - BearerAuth: []
+
+tags:
+  - name: Article Extraction
+    description: Operations for extracting data from JAMA articles
+  - name: Abstract Generation
+    description: Operations for generating VA-style PowerPoint abstracts
