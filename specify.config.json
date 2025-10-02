@@ -1,0 +1,7 @@
+{
+  "projectName": "jama-va-abstractor",
+  "ai": "copilot",
+  "specs": "./specs",
+  "output": "./src/types",
+  "format": "typescript"
+}
