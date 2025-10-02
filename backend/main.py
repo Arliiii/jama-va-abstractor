@@ -20,7 +20,7 @@ app = FastAPI(title="JAMA VA Abstractor API", version="1.0.0")
 # CORS middleware for frontend connection
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000", "https://lovable.dev"],
+    allow_origins=["http://localhost:5173", "http://localhost:3000", "http://localhost:8081", "https://lovable.dev"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -105,7 +105,7 @@ async def extract_article(
     jobs[job_id] = {
         "job_id": job_id,
         "status": "started",
-        "steps": [step.dict() for step in initial_steps],
+        "steps": [step.model_dump() for step in initial_steps],
         "source": {
             "type": "url" if url else "pdf",
             "url": url,
@@ -148,24 +148,37 @@ async def get_progress_stream(job_id: str):
         raise HTTPException(status_code=404, detail="Job not found")
     
     async def generate_progress():
-        while job_id in jobs:
-            job = jobs[job_id]
-            # Send current job status as SSE
-            yield f"data: {json.dumps(job)}\n\n"
-            
-            # Stop streaming if job is completed or failed
-            if job["status"] in ["completed", "failed"]:
-                break
+        try:
+            while job_id in jobs:
+                job = jobs[job_id]
+                # Send current job status as properly formatted SSE
+                data = json.dumps(job)
+                yield f"data: {data}\n\n"
                 
-            # Wait before next update
-            await asyncio.sleep(1)
+                # Stop streaming if job is completed or failed
+                if job["status"] in ["completed", "failed"]:
+                    # Send final message and close connection properly
+                    yield f"data: {json.dumps({'type': 'close', 'status': job['status']})}\n\n"
+                    break
+                    
+                # Wait before next update
+                await asyncio.sleep(1)
+        except Exception as e:
+            # Send error message and close connection
+            error_data = json.dumps({
+                'type': 'error',
+                'message': f'Stream error: {str(e)}'
+            })
+            yield f"data: {error_data}\n\n"
     
     return StreamingResponse(
         generate_progress(),
-        media_type="text/plain",
+        media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "Cache-Control",
         }
     )
 
@@ -354,4 +367,4 @@ class ProcessingError(Exception):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8002)

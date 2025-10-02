@@ -10,6 +10,7 @@ import { FileUploadZone } from "@/components/FileUploadZone";
 import { FileText, Loader2, Download, CheckCircle, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
+import { useExtraction } from "@/hooks/useExtraction";
 
 interface ProcessingStep {
   id: string;
@@ -47,12 +48,18 @@ const Index = () => {
   const { toast } = useToast();
   const [articleUrl, setArticleUrl] = useState("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [processingSteps, setProcessingSteps] = useState<ProcessingStep[]>([]);
-  const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [summaryData, setSummaryData] = useState<any>(null);
-  const [detailedError, setDetailedError] = useState<ErrorDetails | null>(null);
   const [showLogs, setShowLogs] = useState(false);
+  
+  const {
+    currentStep,
+    logs: extractionLogs,
+    extractedData,
+    error,
+    isExtracting,
+    jobId,
+    downloadPowerPoint,
+    startExtraction
+  } = useExtraction();
 
   const validateJamaUrl = (url: string) => {
     if (!url) return true; // Allow empty for validation display
@@ -65,127 +72,9 @@ const Index = () => {
     }
   };
 
-  const simulateProcess = async () => {
-    setIsProcessing(true);
-    setShowLogs(true);
 
-    // Mock processing steps for demonstration
-    const mockSteps = [
-      { id: '1', name: 'Scraping Article', status: 'processing' as const, message: 'Extracting content from JAMA article...', timestamp: new Date().toISOString() },
-      { id: '2', name: 'Parsing Data', status: 'pending' as const, message: 'Waiting to parse extracted content', timestamp: new Date().toISOString() },
-      { id: '3', name: 'Summarizing Findings', status: 'pending' as const, message: 'Waiting to generate AI summary', timestamp: new Date().toISOString() },
-      { id: '4', name: 'Generating PowerPoint', status: 'pending' as const, message: 'Waiting to create presentation', timestamp: new Date().toISOString() }
-    ];
 
-    setProcessingSteps(mockSteps);
-
-    // Add initial log entries
-    setLogs([
-      {
-        id: '1',
-        timestamp: new Date().toISOString(),
-        step: 'Scraping',
-        level: 'info',
-        message: 'Starting article extraction from JAMA',
-        details: articleUrl ? `URL: ${articleUrl}` : `File: ${uploadedFile?.name}`,
-      }
-    ]);
-
-    // Mock processing simulation
-    setTimeout(() => {
-      const updatedSteps = mockSteps.map((step, index) => ({
-        ...step,
-        status: index === 0 ? 'completed' as const : index === 1 ? 'processing' as const : 'pending' as const,
-        message: index === 0 ? 'Successfully extracted article content' : index === 1 ? 'Parsing medical data from content...' : step.message
-      }));
-      setProcessingSteps(updatedSteps);
-
-      setLogs(prev => [...prev, {
-        id: '2',
-        timestamp: new Date().toISOString(),
-        step: 'Scraping',
-        level: 'success',
-        message: 'Article content successfully extracted',
-        details: 'Found 15,234 words of content',
-        duration: 2500
-      }, {
-        id: '3',
-        timestamp: new Date().toISOString(),
-        step: 'Parsing',
-        level: 'info',
-        message: 'Parsing medical data and identifying key components',
-        details: 'Extracting population, intervention, outcomes, and findings'
-      }]);
-
-      // Mock completion
-      setTimeout(() => {
-        const completedSteps = mockSteps.map(step => ({
-          ...step,
-          status: 'completed' as const,
-          message: `Successfully ${step.name.toLowerCase()}`
-        }));
-        setProcessingSteps(completedSteps);
-        setIsProcessing(false);
-
-        setLogs(prev => [...prev, {
-          id: '4',
-          timestamp: new Date().toISOString(),
-          step: 'Summarizing',
-          level: 'success',
-          message: 'AI summarization completed',
-          details: 'Generated summaries for all sections with medical icon selection',
-          duration: 1800
-        }, {
-          id: '5',
-          timestamp: new Date().toISOString(),
-          step: 'PowerPoint Generation',
-          level: 'success',
-          message: 'VA-style PowerPoint presentation created',
-          details: 'Generated 12-slide presentation with medical branding',
-          duration: 3200
-        }]);
-
-        // Set mock summary data
-        setSummaryData({
-          title: "Effectiveness of Novel Treatment in Clinical Trial",
-          population: {
-            size: "1,247 participants",
-            demographics: "Adults aged 45-75, 52% female",
-            criteria: "Diagnosed condition, stable medication regimen"
-          },
-          intervention: {
-            treatment: "Novel therapeutic intervention",
-            duration: "12 weeks",
-            control: "Standard care control group"
-          },
-          setting: {
-            location: "Multi-center study (15 sites)",
-            type: "Randomized controlled trial",
-            duration: "18-month study period"
-          },
-          outcomes: {
-            primary: "Primary efficacy endpoint improvement",
-            secondary: ["Safety measures", "Quality of life", "Biomarkers"],
-            measurements: "Standardized assessment tools"
-          },
-          findings: {
-            primary: "Significant improvement in primary endpoint with 32% relative risk reduction (p<0.001). Treatment group showed sustained benefits throughout the study period.",
-            secondary: "Improved quality of life scores and favorable safety profile. No serious adverse events related to treatment.",
-            significance: "Clinically meaningful and statistically significant results with narrow confidence intervals",
-            limitations: "Single-blind design, limited diversity in study population, short follow-up period"
-          },
-          medicalIcon: "cardiology"
-        });
-
-        toast({
-          title: "Success!",
-          description: "Your VA-style PowerPoint presentation has been generated.",
-        });
-      }, 3000);
-    }, 2000);
-  };
-
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (!articleUrl && !uploadedFile) {
       toast({
         title: "Input Required",
@@ -204,32 +93,46 @@ const Index = () => {
       return;
     }
 
-    // Reset all state
-    setProcessingSteps([]);
-    setLogs([]);
-    setSummaryData(null);
-    setDetailedError(null);
-
-    simulateProcess();
+    setShowLogs(true);
+    
+    try {
+      await startExtraction(uploadedFile, articleUrl);
+      toast({
+        title: "Processing Started",
+        description: "Your JAMA article is being processed. You can monitor the progress below.",
+      });
+    } catch (error) {
+      toast({
+        title: "Processing Failed",
+        description: "Failed to start processing. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDownload = () => {
-    // Mock download
-    const mockPptContent = "Mock PowerPoint content";
-    const blob = new Blob([mockPptContent], { type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `JAMA-VA-Abstract-${new Date().toISOString().split('T')[0]}.pptx`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  const handleDownload = async () => {
+    if (!jobId) {
+      toast({
+        title: "No Presentation Available",
+        description: "Please process an article first before downloading.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    toast({
-      title: "Downloading...",
-      description: "Your PowerPoint presentation will download shortly.",
-    });
+    try {
+      await downloadPowerPoint(jobId);
+      toast({
+        title: "Download Started",
+        description: "Your PowerPoint presentation is being downloaded.",
+      });
+    } catch (error) {
+      toast({
+        title: "Download Failed",
+        description: "Unable to download the presentation. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleRetry = () => {
@@ -237,12 +140,19 @@ const Index = () => {
   };
 
   const handleDismissError = () => {
-    setDetailedError(null);
+    // Error will be handled by the useExtraction hook
   };
 
-  const isComplete = processingSteps.length > 0 && 
-    processingSteps.every(step => step.status === 'completed');
-  const hasError = processingSteps.some(step => step.status === 'error') || !!detailedError;
+  // Convert currentStep to processing steps for display
+  const processingSteps = currentStep > 0 ? [
+    { id: '1', name: 'Scraping Article', status: currentStep > 1 ? 'completed' : currentStep === 1 ? 'processing' : 'pending' as const, message: currentStep > 1 ? 'Successfully extracted article content' : 'Extracting content from JAMA article...', timestamp: new Date().toISOString() },
+    { id: '2', name: 'Parsing Data', status: currentStep > 2 ? 'completed' : currentStep === 2 ? 'processing' : 'pending' as const, message: currentStep > 2 ? 'Successfully parsed extracted content' : 'Parsing medical data from content...', timestamp: new Date().toISOString() },
+    { id: '3', name: 'Summarizing Findings', status: currentStep > 3 ? 'completed' : currentStep === 3 ? 'processing' : 'pending' as const, message: currentStep > 3 ? 'Successfully generated AI summary' : 'Generating AI summary...', timestamp: new Date().toISOString() },
+    { id: '4', name: 'Generating PowerPoint', status: currentStep > 4 ? 'completed' : currentStep === 4 ? 'processing' : 'pending' as const, message: currentStep > 4 ? 'Successfully created presentation' : 'Creating VA-style presentation...', timestamp: new Date().toISOString() }
+  ] : [];
+  
+  const isComplete = currentStep === 5; // All steps completed
+  const hasError = !!error;
 
   return (
     <div className="min-h-screen bg-background">
@@ -274,7 +184,7 @@ const Index = () => {
                     placeholder="https://jamanetwork.com/journals/jama/article/..."
                     value={articleUrl}
                     onChange={(e) => setArticleUrl(e.target.value)}
-                    disabled={isProcessing || !!uploadedFile}
+                    disabled={isExtracting || !!uploadedFile}
                     className={articleUrl && !validateJamaUrl(articleUrl) ? "border-red-300 focus:border-red-500" : ""}
                   />
                   {articleUrl && !validateJamaUrl(articleUrl) && (
@@ -316,7 +226,7 @@ const Index = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => setUploadedFile(null)}
-                          disabled={isProcessing}
+                          disabled={isExtracting}
                         >
                           Remove
                         </Button>
@@ -329,11 +239,11 @@ const Index = () => {
 
                 <Button
                   onClick={handleGenerate}
-                  disabled={isProcessing || (!articleUrl && !uploadedFile) || (articleUrl && !validateJamaUrl(articleUrl))}
+                  disabled={isExtracting || (!articleUrl && !uploadedFile) || (articleUrl && !validateJamaUrl(articleUrl))}
                   className="w-full"
                   size="lg"
                 >
-                  {isProcessing ? (
+                  {isExtracting ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Processing...
@@ -346,17 +256,24 @@ const Index = () => {
             </Card>
 
             {/* Progress Tracker */}
-            {(processingSteps.length > 0 || isProcessing) && (
+            {(processingSteps.length > 0 || isExtracting) && (
               <ProgressTracker steps={processingSteps} />
             )}
 
             {/* Log Viewer */}
-            <LogViewer logs={logs} isVisible={showLogs} />
+            <LogViewer logs={extractionLogs} isVisible={showLogs} />
 
             {/* Error Display */}
-            {detailedError && (
+            {error && (
               <ErrorDisplay 
-                error={detailedError} 
+                error={{
+                  step: 'Processing',
+                  code: 'EXTRACTION_ERROR',
+                  message: error,
+                  reason: 'An error occurred during processing',
+                  timestamp: new Date().toISOString(),
+                  recoveryActions: ['Check your internet connection', 'Try again', 'Contact support if the issue persists']
+                }} 
                 onRetry={handleRetry}
                 onDismiss={handleDismissError}
               />
@@ -397,8 +314,8 @@ const Index = () => {
             )}
 
             {/* Summary Display */}
-            {summaryData && (
-              <SummaryDisplay data={summaryData} isVisible={true} />
+            {extractedData && (
+              <SummaryDisplay data={extractedData} isVisible={true} />
             )}
             
             {/* Processing Info */}
