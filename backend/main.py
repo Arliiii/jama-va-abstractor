@@ -20,7 +20,19 @@ app = FastAPI(title="JAMA VA Abstractor API", version="1.0.0")
 # CORS middleware for frontend connection
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000", "http://localhost:8081", "https://lovable.dev"],
+    allow_origins=[
+        "http://localhost:5173", 
+        "http://localhost:3000", 
+        "http://localhost:8080",
+        "http://localhost:8081", 
+        "http://localhost:8082",
+        "http://localhost:8083",
+        "http://10.56.177.53:8082",
+        "http://10.56.177.53:8083",
+        "http://172.19.112.1:8082",
+        "http://172.19.112.1:8083",
+        "https://lovable.dev"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
