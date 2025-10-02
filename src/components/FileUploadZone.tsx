@@ -41,28 +41,53 @@ export const FileUploadZone = ({ onFileSelect }: FileUploadZoneProps) => {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={cn(
-        "border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200",
+        "relative border-2 border-dashed rounded-xl p-10 text-center transition-all duration-300 group cursor-pointer overflow-hidden",
         isDragging
-          ? "border-primary bg-accent"
-          : "border-border bg-card hover:border-primary/50"
+          ? "border-primary bg-gradient-to-br from-blue-50 to-indigo-50 scale-105 shadow-lg"
+          : "border-border bg-gradient-to-br from-slate-50 to-slate-100 hover:border-primary/60 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50 hover:scale-102"
       )}
     >
-      <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-      <p className="text-sm text-foreground mb-2">
-        Drag and drop your PDF here, or
-      </p>
-      <label className="inline-block">
-        <input
-          type="file"
-          accept=".pdf"
-          onChange={handleFileInput}
-          className="hidden"
-        />
-        <span className="text-sm text-primary font-medium cursor-pointer hover:underline">
-          browse files
-        </span>
-      </label>
-      <p className="text-xs text-muted-foreground mt-2">PDF files only</p>
+      {/* Background animation */}
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 to-purple-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+      
+      {/* Upload icon with animation */}
+      <div className="relative z-10">
+        <div className={cn(
+          "w-16 h-16 mx-auto mb-4 rounded-xl flex items-center justify-center transition-all duration-300",
+          isDragging 
+            ? "bg-gradient-to-br from-blue-400 to-indigo-500 text-white scale-110 shadow-lg" 
+            : "bg-gradient-to-br from-slate-200 to-slate-300 text-slate-600 group-hover:from-blue-400 group-hover:to-indigo-500 group-hover:text-white group-hover:scale-110"
+        )}>
+          <Upload className="w-8 h-8" />
+        </div>
+        
+        <div className="space-y-2">
+          <p className="text-base font-medium text-foreground">
+            Drag and drop your PDF here
+          </p>
+          <p className="text-sm text-muted-foreground">
+            or
+          </p>
+          <label className="inline-block">
+            <input
+              type="file"
+              accept=".pdf"
+              onChange={handleFileInput}
+              className="hidden"
+            />
+            <span className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-sm font-medium rounded-lg cursor-pointer hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105">
+              Browse Files
+            </span>
+          </label>
+        </div>
+        
+        <div className="mt-4 flex items-center justify-center space-x-2 text-xs text-muted-foreground">
+          <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
+          <span>PDF files only</span>
+          <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
+          <span>Max 10MB</span>
+        </div>
+      </div>
     </div>
   );
 };

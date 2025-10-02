@@ -155,28 +155,41 @@ const Index = () => {
   const hasError = !!error;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card shadow-sm">
-        <div className="container mx-auto px-6 py-6">
-          <h1 className="text-2xl font-bold text-foreground">JAMA VA Abstractor</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            AI-powered VA-style presentation generator for JAMA research articles
-          </p>
+    <div className="min-h-screen">
+      {/* Header with gradient background */}
+      <header className="relative overflow-hidden">
+        <div className="absolute inset-0 gradient-bg opacity-10"></div>
+        <div className="glass-card border-0 border-b backdrop-blur-xl">
+          <div className="container mx-auto px-6 py-8">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center float-animation">
+                <FileText className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  JAMA VA Abstractor
+                </h1>
+                <p className="text-sm text-muted-foreground mt-1 font-medium">
+                  AI-powered VA-style presentation generator for medical research articles
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </header>
 
       {/* Main Layout */}
       <main className="container mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Input & Logs */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-8">
             {/* Input Section */}
-            <Card>
-              <CardContent className="pt-6 space-y-4">
-                <div className="space-y-2">
-                  <label htmlFor="article-url" className="text-sm font-medium text-foreground">
-                    JAMA Article URL
+            <Card className="glass-card card-hover border-0 shadow-lg">
+              <CardContent className="pt-8 pb-8 px-8 space-y-6">
+                <div className="space-y-3">
+                  <label htmlFor="article-url" className="text-base font-semibold text-foreground flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                    <span>JAMA Article URL</span>
                   </label>
                   <Input
                     id="article-url"
@@ -185,40 +198,51 @@ const Index = () => {
                     value={articleUrl}
                     onChange={(e) => setArticleUrl(e.target.value)}
                     disabled={isExtracting || !!uploadedFile}
-                    className={articleUrl && !validateJamaUrl(articleUrl) ? "border-red-300 focus:border-red-500" : ""}
+                    className={`h-12 px-4 text-base border-0 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl shadow-inner transition-all duration-200 focus:from-blue-50 focus:to-indigo-50 focus:shadow-md ${
+                      articleUrl && !validateJamaUrl(articleUrl) 
+                        ? "from-red-50 to-rose-50 ring-2 ring-red-300" 
+                        : "focus:ring-2 focus:ring-blue-300"
+                    }`}
                   />
                   {articleUrl && !validateJamaUrl(articleUrl) && (
-                    <p className="text-sm text-red-600 flex items-center mt-1">
-                      <AlertTriangle className="h-4 w-4 mr-1" />
-                      Please enter a valid JAMA Network URL
-                    </p>
+                    <div className="flex items-center space-x-2 p-3 bg-gradient-to-r from-red-50 to-rose-50 rounded-lg border border-red-200">
+                      <AlertTriangle className="h-4 w-4 text-red-500 flex-shrink-0" />
+                      <p className="text-sm text-red-700 font-medium">
+                        Please enter a valid JAMA Network URL
+                      </p>
+                    </div>
                   )}
                 </div>
 
-                <div className="relative">
+                <div className="relative my-8">
                   <div className="absolute inset-0 flex items-center">
-                    <Separator />
+                    <div className="w-full h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
                   </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">Or</span>
+                  <div className="relative flex justify-center">
+                    <span className="bg-white px-4 py-2 text-sm font-medium text-slate-500 rounded-full shadow-sm border border-slate-200">
+                      OR
+                    </span>
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">
-                    Upload PDF
+                  <label className="text-base font-semibold text-foreground mb-3 flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                    <span>Upload PDF</span>
                   </label>
                   {uploadedFile ? (
-                    <div className="border rounded-lg p-4 bg-muted/50">
+                    <div className="border-0 rounded-xl p-5 bg-gradient-to-r from-green-50 to-emerald-50 shadow-md">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <FileText className="w-6 h-6 text-primary" />
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg">
+                            <FileText className="w-6 h-6 text-white" />
+                          </div>
                           <div>
-                            <p className="text-sm font-medium text-foreground">
+                            <p className="text-base font-semibold text-foreground">
                               {uploadedFile.name}
                             </p>
-                            <p className="text-xs text-muted-foreground">
-                              {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
+                            <p className="text-sm text-green-600 font-medium">
+                              {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB • Ready to process
                             </p>
                           </div>
                         </div>
@@ -227,6 +251,7 @@ const Index = () => {
                           size="sm"
                           onClick={() => setUploadedFile(null)}
                           disabled={isExtracting}
+                          className="border-green-200 text-green-700 hover:bg-green-100 rounded-lg px-4 py-2 font-medium"
                         >
                           Remove
                         </Button>
@@ -240,16 +265,19 @@ const Index = () => {
                 <Button
                   onClick={handleGenerate}
                   disabled={isExtracting || (!articleUrl && !uploadedFile) || (articleUrl && !validateJamaUrl(articleUrl))}
-                  className="w-full"
+                  className="w-full btn-gradient-primary border-0 text-white font-semibold py-6 text-lg shadow-lg"
                   size="lg"
                 >
                   {isExtracting ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Processing...
+                      <Loader2 className="w-5 h-5 mr-3 animate-spin" />
+                      Processing Your Article...
                     </>
                   ) : (
-                    "Generate VA PowerPoint"
+                    <>
+                      <FileText className="w-5 h-5 mr-3" />
+                      Generate VA PowerPoint
+                    </>
                   )}
                 </Button>
               </CardContent>
@@ -281,31 +309,34 @@ const Index = () => {
           </div>
 
           {/* Right Column - Results */}
-          <div className="lg:col-span-1 space-y-6">
+          <div className="lg:col-span-1 space-y-8">
             {/* Download Section */}
             {isComplete && (
-              <Card className="border-green-200 bg-green-50">
-                <CardContent className="pt-6">
-                  <div className="text-center space-y-4">
-                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                      <CheckCircle className="w-8 h-8 text-green-600" />
+              <Card className="glass-card border-0 shadow-xl bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 card-hover">
+                <CardContent className="pt-8 pb-8 px-8">
+                  <div className="text-center space-y-6">
+                    <div className="relative">
+                      <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto shadow-lg pulse-glow">
+                        <CheckCircle className="w-10 h-10 text-white" />
+                      </div>
+                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-400 rounded-full animate-ping"></div>
                     </div>
                     
                     <div>
-                      <h3 className="text-lg font-semibold text-green-900">
-                        PowerPoint Generated!
+                      <h3 className="text-xl font-bold text-green-900 mb-2">
+                        🎉 PowerPoint Generated!
                       </h3>
-                      <p className="text-sm text-green-700 mt-1">
-                        Your VA-style presentation is ready for download.
+                      <p className="text-sm text-green-700 leading-relaxed">
+                        Your professional VA-style presentation is ready for download with all the extracted insights.
                       </p>
                     </div>
 
                     <Button
                       onClick={handleDownload}
-                      className="w-full bg-green-600 hover:bg-green-700"
+                      className="w-full btn-gradient-success border-0 text-white font-semibold py-4 text-base shadow-lg"
                       size="lg"
                     >
-                      <Download className="w-4 h-4 mr-2" />
+                      <Download className="w-5 h-5 mr-3" />
                       Download PowerPoint
                     </Button>
                   </div>
@@ -320,20 +351,38 @@ const Index = () => {
             
             {/* Processing Info */}
             {!isComplete && !hasError && processingSteps.length === 0 && (
-              <Card className="border-blue-200 bg-blue-50">
-                <CardContent className="pt-6">
-                  <div className="text-center space-y-4">
-                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
-                      <FileText className="w-8 h-8 text-blue-600" />
+              <Card className="glass-card border-0 shadow-lg bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 card-hover">
+                <CardContent className="pt-8 pb-8 px-8">
+                  <div className="text-center space-y-6">
+                    <div className="relative">
+                      <div className="w-20 h-20 bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto shadow-lg float-animation">
+                        <FileText className="w-10 h-10 text-white" />
+                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-500 rounded-2xl opacity-20 animate-pulse"></div>
                     </div>
                     
                     <div>
-                      <h3 className="text-lg font-semibold text-blue-900">
-                        Ready to Process
+                      <h3 className="text-xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
+                        Ready to Transform Research
                       </h3>
-                      <p className="text-sm text-blue-700 mt-1">
-                        Enter a JAMA article URL or upload a PDF to get started.
+                      <p className="text-sm text-blue-700 leading-relaxed">
+                        Upload a medical research article or enter a JAMA URL to generate your professional VA-style presentation.
                       </p>
+                    </div>
+
+                    <div className="flex items-center justify-center space-x-6 text-xs text-blue-600">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                        <span>AI-Powered</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
+                        <span>VA-Style</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                        <span>Professional</span>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
