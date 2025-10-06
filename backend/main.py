@@ -31,6 +31,10 @@ app.add_middleware(
         "http://10.56.177.53:8083",
         "http://172.19.112.1:8082",
         "http://172.19.112.1:8083",
+        "http://192.168.137.1:8080",
+        "http://192.168.137.1:8081",
+        "http://192.168.137.1:8082",
+        "http://192.168.137.1:8083",
         "https://lovable.dev"
     ],
     allow_credentials=True,
@@ -339,10 +343,18 @@ async def process_article_pipeline(job_id: str):
         job["updated_at"] = datetime.now().isoformat()
         
     except ProcessingError as e:
-        # Handle pipeline step errors
-        await update_step_status(job_id, e.step, "error", f"Error: {e.message}")
+        # Handle pipeline step errors with more helpful messages
+        error_message = e.message
+        
+        # Add specific suggestions for scraping errors
+        if e.step == "scrape" and "403" in str(e.message):
+            error_message = "JAMA Network blocked access. Try:\n• Upload the article as PDF instead\n• Check if you have institutional access\n• Try again later"
+        elif e.step == "scrape" and "paywall" in str(e.message).lower():
+            error_message = "Article is behind paywall. Try:\n• Upload as PDF if you have access\n• Use institutional login\n• Contact support"
+        
+        await update_step_status(job_id, e.step, "error", f"Error: {error_message}")
         job["status"] = "failed"
-        job["error"] = f"Pipeline failed at step '{e.step}': {e.message}"
+        job["error"] = f"Pipeline failed at step '{e.step}': {error_message}"
         job["updated_at"] = datetime.now().isoformat()
         
     except Exception as e:
@@ -379,4 +391,14 @@ class ProcessingError(Exception):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8002)
+    from dotenv import load_dotenv
+    
+    # Load environment variables
+    load_dotenv()
+    
+    # Get configuration from environment
+    host = os.getenv("HOST", "0.0.0.0")
+    port = int(os.getenv("PORT", 8000))
+    
+    print(f"Starting JAMA VA Abstractor Backend on {host}:{port}")
+    uvicorn.run(app, host=host, port=port)

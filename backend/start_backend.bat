@@ -2,6 +2,8 @@
 echo Starting JAMA VA Abstractor Backend...
 echo.
 
+cd /d "%~dp0"
+
 REM Check if Python is installed
 python --version >nul 2>&1
 if errorlevel 1 (
@@ -11,12 +13,16 @@ if errorlevel 1 (
     exit /b 1
 )
 
-REM Check if we're in the backend directory
-if not exist "requirements.txt" (
-    echo ERROR: requirements.txt not found
-    echo Please run this script from the backend directory
-    pause
-    exit /b 1
+REM Check if dependencies are installed
+python -c "import fastapi, uvicorn" >nul 2>&1
+if errorlevel 1 (
+    echo Installing dependencies...
+    pip install -r requirements.txt
+    if errorlevel 1 (
+        echo ERROR: Failed to install dependencies
+        pause
+        exit /b 1
+    )
 )
 
 REM Check if .env file exists
@@ -25,18 +31,8 @@ if not exist ".env" (
     copy ".env.example" ".env"
     echo.
     echo IMPORTANT: Please edit .env file and add your Google Gemini API key
-    echo Press any key to open .env file in notepad...
+    echo Press any key to continue...
     pause >nul
-    notepad .env
-)
-
-REM Install dependencies
-echo Installing Python dependencies...
-pip install -r requirements.txt
-if errorlevel 1 (
-    echo ERROR: Failed to install dependencies
-    pause
-    exit /b 1
 )
 
 REM Create necessary directories
@@ -44,11 +40,12 @@ if not exist "uploads" mkdir uploads
 if not exist "output" mkdir output
 
 echo.
-echo Backend setup complete!
-echo Starting server on http://localhost:8000
+echo Starting backend server...
+echo Backend will be available at: http://localhost:8000
+echo API documentation at: http://localhost:8000/docs
 echo.
 echo Press Ctrl+C to stop the server
 echo.
 
-REM Start the server
-uvicorn main:app --reload --host 127.0.0.1 --port 8000
+REM Start the server with explicit host binding
+uvicorn main:app --host 127.0.0.1 --port 8000 --reload

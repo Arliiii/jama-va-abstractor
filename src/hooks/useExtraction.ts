@@ -42,7 +42,7 @@ export const useExtraction = () => {
   const [isExtracting, setIsExtracting] = useState(false);
 
   const startProgressTracking = useCallback((jobId: string) => {
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8002';
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
     const eventSource = new EventSource(`${apiBaseUrl}/api/progress/${jobId}`);
     
     eventSource.onmessage = (event) => {
@@ -131,7 +131,7 @@ export const useExtraction = () => {
       console.log('Starting extraction with:', file ? `file: ${file.name}` : `url: ${url}`);
 
       // Start the extraction process
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8002';
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
       const response = await fetch(`${apiBaseUrl}/api/extract`, {
         method: 'POST',
         body: formData,
@@ -167,7 +167,7 @@ export const useExtraction = () => {
       throw new Error('No job ID available for download');
     }
 
-    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8002';
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
     const response = await fetch(`${apiBaseUrl}/api/download/${jobId}`);
     
     if (!response.ok) {

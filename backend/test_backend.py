@@ -98,8 +98,8 @@ def test_environment():
     else:
         print("✅ .env file found")
     
-    # Check if OpenAI API key is configured (we can't directly check the key)
-    print("ℹ️ Make sure OPENAI_API_KEY is configured in your environment")
+    # Check if Gemini API key is configured (we can't directly check the key)
+    print("ℹ️ Make sure GEMINI_API_KEY is configured in your environment")
     return True
 
 def main():
@@ -120,15 +120,15 @@ def main():
         print("   3. No firewall blocking the connection")
         sys.exit(1)
     
-    # Test article processing (optional - requires OpenAI API key)
-    print("\n📝 Article processing test requires OpenAI API key.")
+    # Test article processing (optional - requires Gemini API key)
+    print("\n📝 Article processing test requires Gemini API key.")
     user_input = input("Run article processing test? (y/N): ").lower().strip()
     
     if user_input == 'y':
         if not test_article_processing():
             print("\n❌ Article processing test failed. Check:")
-            print("   1. OpenAI API key is correctly configured")
-            print("   2. OpenAI account has sufficient credits")
+            print("   1. Gemini API key is correctly configured")
+            print("   2. Gemini API account has sufficient quota")
             print("   3. Internet connection for web scraping")
             sys.exit(1)
     else:

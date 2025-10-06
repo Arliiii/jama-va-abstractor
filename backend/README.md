@@ -6,7 +6,7 @@ A FastAPI-powered backend that processes JAMA articles and generates VA-style Po
 
 - **Article Scraping**: Extract content from JAMA URLs or uploaded PDF files
 - **Intelligent Parsing**: Extract key study details, population, interventions, and findings
-- **AI Summarization**: Use OpenAI to create concise, medical-focused summaries
+- **AI Summarization**: Use Google Gemini to create concise, medical-focused summaries
 - **VA PowerPoint Generation**: Create branded presentations with medical icons and professional layouts
 - **Real-time Progress**: Server-Sent Events for live progress tracking
 - **Error Handling**: Robust error handling at each pipeline step
@@ -15,7 +15,7 @@ A FastAPI-powered backend that processes JAMA articles and generates VA-style Po
 
 ### Windows
 1. Double-click `start.bat` to automatically set up and start the server
-2. Edit the `.env` file to add your OpenAI API key
+2. Edit the `.env` file to add your Google Gemini API key
 3. The server will start at http://localhost:8000
 
 ### Manual Setup
@@ -27,7 +27,7 @@ A FastAPI-powered backend that processes JAMA articles and generates VA-style Po
 2. Copy environment file and configure:
    ```bash
    copy .env.example .env
-   # Edit .env file with your OpenAI API key
+   # Edit .env file with your Google Gemini API key
    ```
 
 3. Start the server:
@@ -40,7 +40,7 @@ A FastAPI-powered backend that processes JAMA articles and generates VA-style Po
 Create a `.env` file with:
 
 ```bash
-OPENAI_API_KEY=your_openai_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
 HOST=127.0.0.1
 PORT=8000
 DEBUG=True
@@ -64,7 +64,7 @@ DEBUG=True
 ## Dependencies
 
 - FastAPI - Web framework
-- OpenAI - AI summarization
+- Google Gemini - AI summarization
 - Selenium - Web scraping
 - BeautifulSoup4 - HTML parsing
 - python-pptx - PowerPoint generation
@@ -77,5 +77,5 @@ The server runs in reload mode during development. Changes to Python files will 
 ## Troubleshooting
 
 - **Chrome driver issues**: The system will automatically download ChromeDriver
-- **OpenAI API errors**: Verify your API key in `.env`
+- **Gemini API errors**: Verify your API key in `.env`
 - **File upload errors**: Check file size limits and upload directory permissions

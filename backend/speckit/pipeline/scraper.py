@@ -20,19 +20,46 @@ class JAMAScraper:
     def setup_chrome_options(self):
         """Configure Chrome options for scraping"""
         self.chrome_options = Options()
-        self.chrome_options.add_argument("--headless")
+        
+        # Enhanced stealth options
+        self.chrome_options.add_argument("--headless=new")  # Use new headless mode
         self.chrome_options.add_argument("--no-sandbox")
         self.chrome_options.add_argument("--disable-dev-shm-usage")
         self.chrome_options.add_argument("--disable-gpu")
         self.chrome_options.add_argument("--window-size=1920,1080")
         self.chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+        self.chrome_options.add_argument("--disable-web-security")
+        self.chrome_options.add_argument("--allow-running-insecure-content")
+        self.chrome_options.add_argument("--disable-extensions")
+        self.chrome_options.add_argument("--disable-plugins")
+        self.chrome_options.add_argument("--disable-images")  # Faster loading
+        self.chrome_options.add_argument("--disable-javascript")  # Prevent JS detection
+        
+        # Anti-detection measures
         self.chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
         self.chrome_options.add_experimental_option('useAutomationExtension', False)
         
-        # Add user agent to appear more like a real browser
+        # More realistic user agent
         self.chrome_options.add_argument(
-            "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 EdgA/120.0.0.0"
         )
+        
+        # Additional stealth headers
+        self.chrome_options.add_argument("--accept-language=en-US,en;q=0.9")
+        self.chrome_options.add_argument("--accept-encoding=gzip, deflate, br")
+        
+        # Prefs to disable automation indicators
+        prefs = {
+            "profile.default_content_setting_values": {
+                "notifications": 2,
+                "images": 2,  # Block images for faster loading
+                "plugins": 2,
+                "popups": 2,
+                "geolocation": 2,
+                "media_stream": 2,
+            }
+        }
+        self.chrome_options.add_experimental_option("prefs", prefs)
     
     async def scrape_article(self, url: str) -> Dict[str, Any]:
         """
@@ -62,11 +89,25 @@ class JAMAScraper:
         except Exception as requests_error:
             print(f"Requests failed: {requests_error}")
         
-        # Both methods failed
+        # Try alternative academic source (PubMed, etc.)
+        try:
+            result = await self.try_alternative_sources(url)
+            if result["success"]:
+                return result
+        except Exception as alt_error:
+            print(f"Alternative sources failed: {alt_error}")
+        
+        # All methods failed - provide helpful error message
         return {
             "success": False,
-            "message": "Unable to access the article. The content may be behind a paywall or the URL may be incorrect.",
-            "error_type": "scraping_failed"
+            "message": "Unable to access the article. This may be due to:\n• Article is behind a paywall or requires subscription\n• JAMA Network's anti-bot protection\n• Network connectivity issues\n• Invalid URL\n\nTry using a PDF upload instead or check if you have institutional access.",
+            "error_type": "scraping_failed",
+            "suggestions": [
+                "Try uploading the article as a PDF file instead",
+                "Check if you have institutional access to JAMA",
+                "Verify the URL is correct and accessible",
+                "Try again later as this might be a temporary issue"
+            ]
         }
     
     async def scrape_with_selenium(self, url: str) -> Dict[str, Any]:
@@ -132,10 +173,10 @@ class JAMAScraper:
                 driver.quit()
     
     async def scrape_with_requests(self, url: str) -> Dict[str, Any]:
-        """Fallback scraping using requests with headers"""
+        """Fallback scraping using requests with enhanced headers"""
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 EdgA/120.0.0.0',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
             'Accept-Language': 'en-US,en;q=0.9',
             'Accept-Encoding': 'gzip, deflate, br',
             'Connection': 'keep-alive',
@@ -143,15 +184,44 @@ class JAMAScraper:
             'Sec-Fetch-Dest': 'document',
             'Sec-Fetch-Mode': 'navigate',
             'Sec-Fetch-Site': 'none',
-            'Cache-Control': 'max-age=0'
+            'Sec-Fetch-User': '?1',
+            'Cache-Control': 'max-age=0',
+            'DNT': '1',
+            'Referer': 'https://www.google.com/',
+            'Origin': 'https://www.google.com'
         }
         
         session = requests.Session()
         session.headers.update(headers)
         
+        # Add some delays to appear more human-like
+        import time
+        time.sleep(2)
+        
         try:
-            response = session.get(url, timeout=30, allow_redirects=True)
-            response.raise_for_status()
+            # Try multiple times with different delays
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    if attempt > 0:
+                        time.sleep(5 * attempt)  # Exponential backoff
+                        print(f"Retry attempt {attempt + 1} after delay...")
+                    
+                    response = session.get(url, timeout=30, allow_redirects=True)
+                    
+                    if response.status_code == 403:
+                        if attempt < max_retries - 1:
+                            continue  # Try again
+                        else:
+                            raise requests.HTTPError(f"403 Forbidden - Access denied after {max_retries} attempts")
+                    
+                    response.raise_for_status()
+                    break  # Success, exit retry loop
+                    
+                except requests.RequestException as e:
+                    if attempt == max_retries - 1:
+                        raise e  # Last attempt failed
+                    continue
             
             content = response.text
             
@@ -273,6 +343,39 @@ class JAMAScraper:
         
         content_lower = content.lower()
         return any(indicator in content_lower for indicator in paywall_indicators)
+    
+    async def try_alternative_sources(self, original_url: str) -> Dict[str, Any]:
+        """Try to find the article from alternative academic sources"""
+        try:
+            # Extract DOI or PMID from URL if possible
+            import re
+            
+            # Try to extract article ID from JAMA URL
+            match = re.search(r'/fullarticle/(\d+)', original_url)
+            if not match:
+                return {"success": False, "message": "Could not extract article ID"}
+            
+            article_id = match.group(1)
+            
+            # Try alternative JAMA URLs or open access versions
+            alternative_urls = [
+                f"https://jamanetwork.com/journals/jama/article-abstract/{article_id}",
+                f"https://pubmed.ncbi.nlm.nih.gov/?term=jama+{article_id}",
+            ]
+            
+            for alt_url in alternative_urls:
+                try:
+                    result = await self.scrape_with_requests(alt_url)
+                    if result["success"]:
+                        result["note"] = f"Content retrieved from alternative source: {alt_url}"
+                        return result
+                except:
+                    continue
+            
+            return {"success": False, "message": "No alternative sources available"}
+            
+        except Exception as e:
+            return {"success": False, "message": f"Alternative source search failed: {str(e)}"}
 
 # For testing
 if __name__ == "__main__":

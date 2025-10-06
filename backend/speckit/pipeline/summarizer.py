@@ -1,20 +1,21 @@
 import os
-from openai import AsyncOpenAI
 from typing import Dict, Any, List
 import asyncio
 import json
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from gemini_service import get_gemini_service, GeminiService
 
 class AISummarizer:
     def __init__(self):
-        # Initialize OpenAI client
-        api_key = os.getenv('OPENAI_API_KEY')
-        if not api_key or api_key == 'your_openai_api_key_here':
-            print("Warning: No valid OpenAI API key found. Using mock responses.")
-            self.client = None
-            self.use_mock = True
+        # Initialize Gemini service
+        self.gemini_service = get_gemini_service()
+        
+        # Check if Gemini is available
+        if self.gemini_service.is_available():
+            print("Gemini API service initialized successfully.")
         else:
-            self.client = AsyncOpenAI(api_key=api_key)
-            self.use_mock = False
+            print("Warning: No valid Gemini API key found. Using mock responses.")
         
         # Define word limits for VA template fields
         self.word_limits = {
@@ -48,9 +49,6 @@ class AISummarizer:
         Summarize extracted data to meet VA template requirements
         """
         try:
-            if self.use_mock:
-                return await self._get_mock_summary(extracted_data)
-            
             summaries = {}
             
             # Summarize each field that has content
@@ -84,24 +82,7 @@ class AISummarizer:
                 "error_type": "summarization_error"
             }
 
-    async def _get_mock_summary(self, extracted_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Return mock summary data when OpenAI API is not available"""
-        mock_summaries = {
-            "title": "Clinical Study of Medical Intervention Effects",
-            "population": "Adult patients aged 18-75 with specific medical condition",
-            "intervention": "Novel therapeutic approach compared to standard care",
-            "setting": "Multi-center randomized controlled trial",
-            "primary_outcome": "Significant improvement in primary endpoint measures",
-            "findings": "Statistically significant results with clinical relevance and good safety profile"
-        }
-        
-        return {
-            "success": True,
-            "summaries": mock_summaries,
-            "medical_icon": "general_medicine",
-            "va_summary": "This clinical study demonstrates effective treatment outcomes with favorable safety profile in the target population.",
-            "icon_emoji": "🏥"
-        }
+
     
     async def summarize_field(self, field_name: str, content: Any, word_limit: int) -> str:
         """Summarize a specific field with AI"""
@@ -164,21 +145,18 @@ class AISummarizer:
         prompt = prompts.get(field_name, f"Summarize this {field_name} in {word_limit} words maximum: {content_text}")
         
         try:
-            response = await self.client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {
-                        "role": "system", 
-                        "content": "You are a medical writing expert specializing in VA-style clinical abstracts. Provide concise, accurate summaries that maintain clinical precision."
-                    },
-                    {"role": "user", "content": prompt}
-                ],
+            # Use Gemini service for summarization
+            response = await self.gemini_service.generate_text(
+                prompt=prompt,
+                system_instruction="You are a medical writing expert specializing in VA-style clinical abstracts. Provide concise, accurate summaries that maintain clinical precision.",
                 max_tokens=word_limit * 3,  # Allow some buffer
-                temperature=0.3,  # Lower temperature for more consistent results
-                timeout=30
+                temperature=0.3  # Lower temperature for more consistent results
             )
             
-            summary = response.choices[0].message.content.strip()
+            if not response.success:
+                raise Exception(f"Gemini API error: {response.error}")
+            
+            summary = response.content.strip()
             
             # Ensure word limit compliance
             words = summary.split()
@@ -226,21 +204,18 @@ class AISummarizer:
         """
         
         try:
-            response = await self.client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are a medical specialist classifier. Analyze study content and select the most appropriate medical specialty category."
-                    },
-                    {"role": "user", "content": prompt}
-                ],
+            # Use Gemini service for medical icon selection
+            response = await self.gemini_service.generate_text(
+                prompt=prompt,
+                system_instruction="You are a medical specialist classifier. Analyze study content and select the most appropriate medical specialty category.",
                 max_tokens=20,
-                temperature=0.1,
-                timeout=15
+                temperature=0.1
             )
             
-            selected_category = response.choices[0].message.content.strip().lower()
+            if not response.success:
+                return self.keyword_based_icon_selection(combined_content)
+            
+            selected_category = response.content.strip().lower()
             
             # Validate the response
             if selected_category in self.medical_icons:
@@ -313,21 +288,18 @@ class AISummarizer:
         """
         
         try:
-            response = await self.client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are a VA medical writer creating concise clinical summaries."
-                    },
-                    {"role": "user", "content": prompt}
-                ],
+            # Use Gemini service for VA summary generation
+            response = await self.gemini_service.generate_text(
+                prompt=prompt,
+                system_instruction="You are a VA medical writer creating concise clinical summaries.",
                 max_tokens=100,
-                temperature=0.3,
-                timeout=15
+                temperature=0.3
             )
             
-            return response.choices[0].message.content.strip()
+            if response.success:
+                return response.content.strip()
+            else:
+                return base_summary[:200]  # Fallback to truncated base summary
             
         except Exception:
             return base_summary[:200]  # Fallback to truncated base summary
@@ -358,8 +330,5 @@ if __name__ == "__main__":
         else:
             print(f"Summarization failed: {result['message']}")
     
-    # Only run test if OPENAI_API_KEY is available
-    if os.getenv('OPENAI_API_KEY'):
-        asyncio.run(test_summarizer())
-    else:
-        print("Set OPENAI_API_KEY environment variable to test the summarizer")
+    # Run test with Gemini API (will use mock if no API key)
+    asyncio.run(test_summarizer())
