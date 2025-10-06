@@ -36,7 +36,9 @@ app.add_middleware(
         "http://192.168.137.1:8082",
         "http://192.168.137.1:8083",
         "https://lovable.dev",
-        "https://jama-va-abstractor.vercel.app"
+        "https://jama-va-abstractor.vercel.app",
+        "https://jama-va-abstractor-b6hz.vercel.app",
+        "https://*.vercel.app"
     ],
     allow_credentials=True,
     allow_methods=["*"],
