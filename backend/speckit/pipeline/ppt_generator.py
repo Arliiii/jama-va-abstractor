@@ -56,7 +56,7 @@ class VAPowerPointGenerator:
             slide = prs.slides.add_slide(slide_layout)
             
             # Add content to slide
-            self.create_va_slide(slide, summaries, medical_icon)
+            self.create_va_slide(slide, summaries, medical_icon, prs.slide_width, prs.slide_height)
             
             # Save presentation
             output_dir = "output"
@@ -83,12 +83,8 @@ class VAPowerPointGenerator:
                 "error_type": "ppt_generation_error"
             }
     
-    def create_va_slide(self, slide, summaries: Dict[str, str], medical_icon: str):
+    def create_va_slide(self, slide, summaries: Dict[str, str], medical_icon: str, slide_width, slide_height):
         """Create the main VA-style slide with all content"""
-        
-        # Slide dimensions
-        slide_width = slide.slide_layout.width
-        slide_height = slide.slide_layout.height
         
         # Header Section
         self.add_header(slide, summaries.get('title', 'Clinical Study Abstract'), medical_icon)
@@ -107,7 +103,7 @@ class VAPowerPointGenerator:
         self.add_findings_section(slide, summaries, right_left, content_top, right_width, content_height)
         
         # Footer
-        self.add_footer(slide)
+        self.add_footer(slide, slide_width, slide_height)
     
     def add_header(self, slide, title: str, medical_icon: str):
         """Add header with title and VA branding"""
@@ -309,11 +305,8 @@ class VAPowerPointGenerator:
         border_shape.element.getparent().remove(border_shape.element)
         slide.shapes._spTree.insert(2, border_shape.element)
     
-    def add_footer(self, slide):
+    def add_footer(self, slide, slide_width, slide_height):
         """Add footer with generation info"""
-        
-        slide_width = slide.slide_layout.width
-        slide_height = slide.slide_layout.height
         
         footer_top = slide_height - Inches(0.6)
         

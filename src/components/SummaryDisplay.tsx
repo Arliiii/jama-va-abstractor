@@ -36,7 +36,7 @@ interface SummaryData {
   };
   outcomes: {
     primary: string;
-    secondary: string[];
+    secondary?: string[];
     measurements: string;
   };
   findings: {
@@ -45,7 +45,7 @@ interface SummaryData {
     significance: string;
     limitations: string;
   };
-  medicalIcon: string;
+  medicalIcon?: string;
 }
 
 interface SummaryDisplayProps {
@@ -59,8 +59,11 @@ export const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
   isVisible, 
   className = '' 
 }) => {
-  const getMedicalIcon = (iconType: string) => {
+  const getMedicalIcon = (iconType: string | undefined) => {
     const iconClass = "h-8 w-8 text-blue-600";
+    if (!iconType) {
+      return <Stethoscope className={iconClass} />;
+    }
     switch (iconType.toLowerCase()) {
       case 'cardiology':
       case 'heart':
@@ -105,7 +108,7 @@ export const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
                   VA Clinical Summary
                 </Badge>
                 <Badge variant="secondary">
-                  {data.medicalIcon}
+                  {data.medicalIcon || 'General Medicine'}
                 </Badge>
               </div>
             </div>
@@ -202,7 +205,7 @@ export const SummaryDisplay: React.FC<SummaryDisplayProps> = ({
             </div>
             <div>
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Secondary</p>
-              <p className="text-sm text-gray-700">{data.outcomes.secondary.join(', ')}</p>
+              <p className="text-sm text-gray-700">{data.outcomes.secondary?.join(', ') || 'Not specified'}</p>
             </div>
             <div>
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Measurements</p>

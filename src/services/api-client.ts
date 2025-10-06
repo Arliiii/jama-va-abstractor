@@ -189,7 +189,7 @@ export class ApiClientError extends Error {
 
 // Create default client instance
 const createApiClient = () => {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
   const apiKey = import.meta.env.VITE_API_KEY;
   
   return new JamaAbstractorApiClient({

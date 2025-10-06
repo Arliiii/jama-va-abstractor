@@ -61,6 +61,46 @@ const Index = () => {
     startExtraction
   } = useExtraction();
 
+  // Transform backend data to SummaryDisplay format
+  const transformExtractedData = (backendData: any) => {
+    if (!backendData || !backendData.summaries) {
+      return null;
+    }
+
+    const summaries = backendData.summaries;
+    
+    return {
+      title: summaries.title || 'Clinical Study',
+      population: {
+        size: summaries.population || 'Not specified',
+        demographics: summaries.demographics || 'Not specified',
+        criteria: summaries.inclusion_criteria || summaries.criteria || 'Not specified'
+      },
+      intervention: {
+        treatment: summaries.intervention || 'Not specified',
+        duration: summaries.duration || 'Not specified',
+        control: summaries.control || summaries.comparator || 'Not specified'
+      },
+      setting: {
+        location: summaries.setting || 'Not specified',
+        type: summaries.study_type || 'Clinical study',
+        duration: summaries.study_duration || summaries.duration || 'Not specified'
+      },
+      outcomes: {
+        primary: summaries.primary_outcome || summaries.outcomes || 'Not specified',
+        secondary: summaries.secondary_outcomes ? summaries.secondary_outcomes.split(',').map((s: string) => s.trim()) : [],
+        measurements: summaries.measurements || summaries.endpoints || 'Not specified'
+      },
+      findings: {
+        primary: summaries.findings || summaries.results || 'Not specified',
+        secondary: summaries.secondary_findings || summaries.secondary_results || 'Not specified',
+        significance: summaries.significance || summaries.statistical_significance || 'Not specified',
+        limitations: summaries.limitations || summaries.study_limitations || 'Not specified'
+      },
+      medicalIcon: backendData.medical_icon || 'general'
+    };
+  };
+
   // Enable dark mode by default
   useEffect(() => {
     document.documentElement.classList.add('dark');
@@ -375,8 +415,8 @@ const Index = () => {
             )}
 
             {/* Summary Display */}
-            {extractedData && (
-              <SummaryDisplay data={extractedData} isVisible={true} />
+            {extractedData && transformExtractedData(extractedData) && (
+              <SummaryDisplay data={transformExtractedData(extractedData)!} isVisible={true} />
             )}
             
             {/* Processing Info */}
