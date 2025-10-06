@@ -158,6 +158,22 @@ async def extract_article(
         message="Processing started successfully"
     )
 
+@app.options("/api/progress/{job_id}")
+async def options_progress_stream(job_id: str):
+    """
+    Handle CORS preflight for SSE endpoint
+    """
+    return StreamingResponse(
+        iter([]),
+        media_type="text/event-stream",
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, OPTIONS",
+            "Access-Control-Allow-Headers": "Cache-Control, Accept, Authorization",
+            "Access-Control-Max-Age": "86400",
+        }
+    )
+
 @app.get("/api/progress/{job_id}")
 async def get_progress_stream(job_id: str):
     """
@@ -198,6 +214,8 @@ async def get_progress_stream(job_id: str):
             "Connection": "keep-alive",
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Headers": "Cache-Control",
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Allow-Methods": "GET, OPTIONS",
         }
     )
 
