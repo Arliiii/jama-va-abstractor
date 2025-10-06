@@ -396,9 +396,24 @@ if __name__ == "__main__":
     # Load environment variables
     load_dotenv()
     
+    # Create directories if they don't exist
+    os.makedirs("uploads", exist_ok=True)
+    os.makedirs("output", exist_ok=True)
+    os.makedirs("/tmp/uploads", exist_ok=True)
+    os.makedirs("/tmp/output", exist_ok=True)
+    
     # Get configuration from environment
     host = os.getenv("HOST", "0.0.0.0")
     port = int(os.getenv("PORT", 8000))
+    debug = os.getenv("DEBUG", "False").lower() == "true"
     
     print(f"Starting JAMA VA Abstractor Backend on {host}:{port}")
-    uvicorn.run(app, host=host, port=port)
+    print(f"Debug mode: {debug}")
+    
+    uvicorn.run(
+        "main:app",
+        host=host,
+        port=port,
+        reload=debug,
+        workers=1 if debug else 2
+    )
