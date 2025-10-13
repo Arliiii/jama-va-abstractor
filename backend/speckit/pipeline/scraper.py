@@ -150,7 +150,7 @@ class JAMAScraper:
                 raise Exception("Retrieved content is too short, likely blocked")
             
             # Check for paywall indicators
-            if self.detect_paywall(page_source):
+            if self.detect_paywall(page_source, url):
                 return {
                     "success": False,
                     "message": "Article appears to be behind a paywall. Full content access may be restricted.",
@@ -230,7 +230,7 @@ class JAMAScraper:
                 raise Exception("Retrieved content is too short")
             
             # Check for paywall
-            if self.detect_paywall(content):
+            if self.detect_paywall(content, url):
                 return {
                     "success": False,
                     "message": "Article appears to be behind a paywall.",
@@ -327,8 +327,11 @@ class JAMAScraper:
         except:
             return False
     
-    def detect_paywall(self, content: str) -> bool:
+    def detect_paywall(self, content: str, url: str = "") -> bool:
         """Detect if content is behind a paywall"""
+        # If it's an abstract URL, be more lenient (abstract-only is OK!)
+        is_abstract_url = 'abstract' in url.lower()
+        
         paywall_indicators = [
             "subscribe",
             "subscription required",
@@ -342,6 +345,17 @@ class JAMAScraper:
         ]
         
         content_lower = content.lower()
+        
+        # For abstract URLs, only check for hard paywalls
+        if is_abstract_url:
+            hard_paywalls = ["subscribe to read", "purchase access", "login required"]
+            for indicator in hard_paywalls:
+                if indicator in content_lower:
+                    return True
+            # If we have abstract content, that's good enough!
+            if len(content) > 500 and any(word in content_lower for word in ['abstract', 'conclusion', 'methods', 'results']):
+                return False
+        
         return any(indicator in content_lower for indicator in paywall_indicators)
     
     async def try_alternative_sources(self, original_url: str) -> Dict[str, Any]:
@@ -357,19 +371,21 @@ class JAMAScraper:
             
             article_id = match.group(1)
             
-            # Try alternative JAMA URLs or open access versions
+            # Try alternative JAMA URLs (abstract is often free)
             alternative_urls = [
-                f"https://jamanetwork.com/journals/jama/article-abstract/{article_id}",
+                f"https://jamanetwork.com/journals/jama/article-abstract/{article_id}",  # Abstract only (often free!)
                 f"https://pubmed.ncbi.nlm.nih.gov/?term=jama+{article_id}",
             ]
             
             for alt_url in alternative_urls:
                 try:
+                    print(f"Trying alternative URL: {alt_url}")
                     result = await self.scrape_with_requests(alt_url)
                     if result["success"]:
                         result["note"] = f"Content retrieved from alternative source: {alt_url}"
                         return result
-                except:
+                except Exception as e:
+                    print(f"Alternative URL {alt_url} failed: {e}")
                     continue
             
             return {"success": False, "message": "No alternative sources available"}
