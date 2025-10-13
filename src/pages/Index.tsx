@@ -7,12 +7,10 @@ import { LogViewer } from "@/components/LogViewer";
 import { SummaryDisplay } from "@/components/SummaryDisplay";
 import { ErrorDisplay } from "@/components/ErrorDisplay";
 import { FileUploadZone } from "@/components/FileUploadZone";
-import { FileText, Loader2, Download, CheckCircle, AlertTriangle, Sparkles, Zap, Star } from "lucide-react";
+import { FileText, Loader2, Download, CheckCircle, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { useExtraction } from "@/hooks/useExtraction";
-import { motion, AnimatePresence } from "framer-motion";
-import Confetti from "react-confetti";
 
 interface ProcessingStep {
   id: string;
@@ -51,8 +49,6 @@ const Index = () => {
   const [articleUrl, setArticleUrl] = useState("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [showLogs, setShowLogs] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight });
   
   const {
     currentStep,
@@ -110,23 +106,6 @@ const Index = () => {
     document.documentElement.classList.add('dark');
     document.body.classList.add('dark');
   }, []);
-
-  // Handle window resize for confetti
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Show confetti when complete
-  useEffect(() => {
-    if (isComplete && !showConfetti) {
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 5000); // Stop after 5 seconds
-    }
-  }, [isComplete]);
 
   const validateJamaUrl = (url: string) => {
     if (!url) return true; // Allow empty for validation display
@@ -246,88 +225,36 @@ const Index = () => {
   const hasError = !!error;
 
   return (
-    <div className="min-h-screen dark relative">
-      {/* Confetti celebration */}
-      {showConfetti && (
-        <Confetti
-          width={windowSize.width}
-          height={windowSize.height}
-          recycle={false}
-          numberOfPieces={500}
-          gravity={0.3}
-        />
-      )}
-
-      {/* Animated particle background */}
-      <div className="particle-bg">
-        {[...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="particle"
-            style={{
-              width: `${Math.random() * 100 + 50}px`,
-              height: `${Math.random() * 100 + 50}px`,
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              background: `radial-gradient(circle, ${
-                ['rgba(59, 130, 246, 0.3)', 'rgba(147, 51, 234, 0.3)', 'rgba(236, 72, 153, 0.3)'][Math.floor(Math.random() * 3)]
-              } 0%, transparent 70%)`,
-            }}
-            animate={{
-              y: [0, -100, 0],
-              x: [0, Math.random() * 100 - 50, 0],
-              scale: [1, 1.2, 1],
-            }}
-            transition={{
-              duration: Math.random() * 10 + 10,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          />
-        ))}
+    <div className="min-h-screen dark">
+      {/* Animated background particles */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-20 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-40 right-32 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+        <div className="bg-grid absolute inset-0 opacity-20"></div>
       </div>
 
       {/* Header with gradient background */}
-      <motion.header
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="relative overflow-hidden"
-      >
+      <header className="relative overflow-hidden animate-slide-in-down">
         <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 opacity-80"></div>
         <div className="glass-card border-0 border-b backdrop-blur-xl relative z-10">
           <div className="container mx-auto px-6 py-8">
             <div className="flex items-center space-x-4">
-              <motion.div
-                whileHover={{ scale: 1.1, rotate: 360 }}
-                transition={{ duration: 0.5 }}
-                className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl flex items-center justify-center float-animation shadow-lg"
-              >
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-xl flex items-center justify-center float-animation shadow-lg hover-glow">
                 <FileText className="w-6 h-6 text-white" />
-              </motion.div>
+              </div>
               <div>
-                <motion.h1
-                  initial={{ x: -50, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.2, duration: 0.5 }}
-                  className="text-3xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent"
-                >
-                  JAMA VA Abstractor ✨
-                </motion.h1>
-                <motion.p
-                  initial={{ x: -50, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.3, duration: 0.5 }}
-                  className="text-sm text-slate-300 mt-1 font-medium flex items-center gap-2"
-                >
-                  <Sparkles className="w-4 h-4 text-yellow-400" />
+                <h1 className="text-3xl font-bold text-gradient-blue animate-fade-in">
+                  JAMA VA Abstractor
+                </h1>
+                <p className="text-sm text-slate-300 mt-1 font-medium animate-fade-in" style={{ animationDelay: '0.2s' }}>
                   AI-powered VA-style presentation generator for medical research articles
-                </motion.p>
+                </p>
               </div>
             </div>
           </div>
         </div>
-      </motion.header>
+      </header>
 
       {/* Main Layout */}
       <main className="container mx-auto px-6 py-8 relative z-10">
@@ -335,13 +262,8 @@ const Index = () => {
           {/* Left Column - Input & Logs */}
           <div className="lg:col-span-2 space-y-8">
             {/* Input Section */}
-            <motion.div
-              initial={{ x: -100, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.4, duration: 0.6 }}
-            >
-              <Card className="glass-card card-hover border-0 shadow-lg">
-                <CardContent className="pt-8 pb-8 px-8 space-y-6">
+            <Card className="glass-card hover-lift border-0 shadow-lg animate-slide-in-left">
+              <CardContent className="pt-8 pb-8 px-8 space-y-6">
                 <div className="space-y-3">
                   <label htmlFor="article-url" className="text-base font-semibold text-slate-200 flex items-center space-x-2">
                     <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
@@ -418,216 +340,116 @@ const Index = () => {
                   )}
                 </div>
 
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                <Button
+                  onClick={handleGenerate}
+                  disabled={isExtracting || (!articleUrl && !uploadedFile) || (articleUrl && !validateJamaUrl(articleUrl))}
+                  className="w-full btn-gradient-primary border-0 text-white font-semibold py-6 text-lg shadow-lg hover-glow ripple-effect transform transition-all duration-300"
+                  size="lg"
                 >
-                  <Button
-                    onClick={handleGenerate}
-                    disabled={isExtracting || (!articleUrl && !uploadedFile) || (articleUrl && !validateJamaUrl(articleUrl))}
-                    className="w-full btn-gradient-primary border-0 text-white font-semibold py-6 text-lg shadow-lg relative overflow-hidden"
-                    size="lg"
-                  >
-                    {isExtracting && (
-                      <motion.div
-                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-20"
-                        animate={{ x: ["-100%", "100%"] }}
-                        transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                      />
-                    )}
-                    {isExtracting ? (
-                      <>
-                        <Loader2 className="w-5 h-5 mr-3 animate-spin" />
-                        Processing Your Article...
-                        <Zap className="w-4 h-4 ml-2" />
-                      </>
-                    ) : (
-                      <>
-                        <FileText className="w-5 h-5 mr-3" />
-                        Generate VA PowerPoint
-                        <Sparkles className="w-4 h-4 ml-2" />
-                      </>
-                    )}
-                  </Button>
-                </motion.div>
+                  {isExtracting ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-3 animate-spin" />
+                      <span className="animate-shimmer">Processing Your Article...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="w-5 h-5 mr-3 animate-bounce" />
+                      Generate VA PowerPoint
+                    </>
+                  )}
+                </Button>
               </CardContent>
             </Card>
-            </motion.div>
 
             {/* Progress Tracker */}
-            <AnimatePresence>
-              {(processingSteps.length > 0 || isExtracting) && (
-                <motion.div
-                  initial={{ y: 50, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: -50, opacity: 0 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <ProgressTracker steps={processingSteps} />
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {(processingSteps.length > 0 || isExtracting) && (
+              <div className="animate-slide-in-up">
+                <ProgressTracker steps={processingSteps} />
+              </div>
+            )}
 
             {/* Log Viewer */}
-            <AnimatePresence>
-              {showLogs && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  <LogViewer logs={extractionLogs} isVisible={showLogs} />
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <div className="animate-fade-in">
+              <LogViewer logs={extractionLogs} isVisible={showLogs} />
+            </div>
 
             {/* Error Display */}
-            <AnimatePresence>
-              {error && (
-                <motion.div
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.8, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <ErrorDisplay 
-                    error={{
-                      step: 'Processing',
-                      code: 'EXTRACTION_ERROR',
-                      message: error,
-                      reason: 'An error occurred during processing',
-                      timestamp: new Date().toISOString(),
-                      recoveryActions: ['Check your internet connection', 'Try again', 'Contact support if the issue persists']
-                    }} 
-                    onRetry={handleRetry}
-                    onDismiss={handleDismissError}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {error && (
+              <div className="animate-scale-in">
+                <ErrorDisplay 
+                  error={{
+                    step: 'Processing',
+                    code: 'EXTRACTION_ERROR',
+                    message: error,
+                    reason: 'An error occurred during processing',
+                    timestamp: new Date().toISOString(),
+                    recoveryActions: ['Check your internet connection', 'Try again', 'Contact support if the issue persists']
+                  }} 
+                  onRetry={handleRetry}
+                  onDismiss={handleDismissError}
+                />
+              </div>
+            )}
           </div>
 
           {/* Right Column - Results */}
-          <motion.div
-            initial={{ x: 100, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.6, duration: 0.6 }}
-            className="lg:col-span-1 space-y-8"
-          >
+          <div className="lg:col-span-1 space-y-8">
             {/* Download Section */}
-            <AnimatePresence>
-              {isComplete && (
-                <motion.div
-                  initial={{ scale: 0.5, rotate: -10, opacity: 0 }}
-                  animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                  exit={{ scale: 0.5, rotate: 10, opacity: 0 }}
-                  transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                >
-                  <Card className="glass-card border-0 shadow-xl bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 card-hover">
-                    <CardContent className="pt-8 pb-8 px-8">
-                      <div className="text-center space-y-6">
-                        <motion.div
-                          className="relative"
-                          animate={{ rotate: [0, 5, -5, 0] }}
-                          transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 2 }}
-                        >
-                          <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto shadow-lg pulse-glow">
-                            <CheckCircle className="w-10 h-10 text-white" />
-                          </div>
-                          <motion.div
-                            className="absolute -top-1 -right-1 w-6 h-6 bg-green-400 rounded-full"
-                            animate={{ scale: [1, 1.5, 1], opacity: [1, 0, 1] }}
-                            transition={{ duration: 1.5, repeat: Infinity }}
-                          />
-                          {[...Array(3)].map((_, i) => (
-                            <motion.div
-                              key={i}
-                              className="absolute top-1/2 left-1/2 w-2 h-2 bg-yellow-400 rounded-full"
-                              initial={{ scale: 0, x: -4, y: -4 }}
-                              animate={{
-                                scale: [0, 1, 0],
-                                x: [0, (i - 1) * 30],
-                                y: [0, -30 - i * 10],
-                                opacity: [0, 1, 0],
-                              }}
-                              transition={{
-                                duration: 1.5,
-                                repeat: Infinity,
-                                delay: i * 0.2,
-                              }}
-                            />
-                          ))}
-                        </motion.div>
-                        
-                        <motion.div
-                          initial={{ y: 20, opacity: 0 }}
-                          animate={{ y: 0, opacity: 1 }}
-                          transition={{ delay: 0.2 }}
-                        >
-                          <h3 className="text-xl font-bold text-green-900 mb-2 flex items-center justify-center gap-2">
-                            🎉 PowerPoint Generated! <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                          </h3>
-                          <p className="text-sm text-green-700 leading-relaxed">
-                            Your professional VA-style presentation is ready for download with all the extracted insights.
-                          </p>
-                        </motion.div>
-
-                        <motion.div
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          <Button
-                            onClick={handleDownload}
-                            className="w-full btn-gradient-success border-0 text-white font-semibold py-4 text-base shadow-lg"
-                            size="lg"
-                          >
-                            <Download className="w-5 h-5 mr-3" />
-                            Download PowerPoint
-                          </Button>
-                        </motion.div>
+            {isComplete && (
+              <Card className="glass-card border-0 shadow-xl bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 hover-lift animate-scale-in">
+                <CardContent className="pt-8 pb-8 px-8">
+                  <div className="text-center space-y-6">
+                    <div className="relative animate-bounce">
+                      <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto shadow-lg pulse-glow">
+                        <CheckCircle className="w-10 h-10 text-white" />
                       </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-400 rounded-full animate-ping"></div>
+                      <div className="absolute -bottom-1 -left-1 w-6 h-6 bg-emerald-400 rounded-full animate-ping" style={{ animationDelay: '0.5s' }}></div>
+                    </div>
+                    
+                    <div className="animate-slide-in-up">
+                      <h3 className="text-xl font-bold text-gradient-green mb-2">
+                        🎉 PowerPoint Generated!
+                      </h3>
+                      <p className="text-sm text-green-700 leading-relaxed">
+                        Your professional VA-style presentation is ready for download with all the extracted insights.
+                      </p>
+                    </div>
+
+                    <Button
+                      onClick={handleDownload}
+                      className="w-full btn-gradient-success border-0 text-white font-semibold py-4 text-base shadow-lg hover-scale ripple-effect"
+                      size="lg"
+                    >
+                      <Download className="w-5 h-5 mr-3 animate-bounce" />
+                      Download PowerPoint
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Summary Display */}
-            <AnimatePresence>
-              {extractedData && transformExtractedData(extractedData) && (
-                <motion.div
-                  initial={{ y: 50, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: -50, opacity: 0 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <SummaryDisplay data={transformExtractedData(extractedData)!} isVisible={true} />
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {extractedData && transformExtractedData(extractedData) && (
+              <div className="animate-slide-in-right">
+                <SummaryDisplay data={transformExtractedData(extractedData)!} isVisible={true} />
+              </div>
+            )}
             
             {/* Processing Info */}
-            <AnimatePresence>
-              {!isComplete && !hasError && processingSteps.length === 0 && (
-                <motion.div
-                  initial={{ scale: 0.9, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  exit={{ scale: 0.9, opacity: 0 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  <Card className="glass-card border-0 shadow-lg bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800 card-hover border border-slate-600">
+            {!isComplete && !hasError && processingSteps.length === 0 && (
+              <Card className="glass-card border-0 shadow-lg bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800 hover-lift border border-slate-600 animate-slide-in-right">
                 <CardContent className="pt-8 pb-8 px-8">
                   <div className="text-center space-y-6">
                     <div className="relative">
-                      <div className="w-20 h-20 bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto shadow-lg float-animation">
+                      <div className="w-20 h-20 bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center mx-auto shadow-lg float-animation hover-glow">
                         <FileText className="w-10 h-10 text-white" />
                       </div>
                       <div className="absolute inset-0 bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-500 rounded-2xl opacity-20 animate-pulse"></div>
                     </div>
                     
-                    <div>
-                      <h3 className="text-xl font-bold bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent mb-2">
+                    <div className="animate-fade-in">
+                      <h3 className="text-xl font-bold text-gradient-blue mb-2">
                         Ready to Transform Research
                       </h3>
                       <p className="text-sm text-slate-300 leading-relaxed">
@@ -636,26 +458,24 @@ const Index = () => {
                     </div>
 
                     <div className="flex items-center justify-center space-x-6 text-xs text-slate-400">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                      <div className="flex items-center space-x-2 stagger-item">
+                        <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
                         <span>AI-Powered</span>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
+                      <div className="flex items-center space-x-2 stagger-item">
+                        <div className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
                         <span>VA-Style</span>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                      <div className="flex items-center space-x-2 stagger-item">
+                        <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
                         <span>Professional</span>
                       </div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
+            )}
+          </div>
         </div>
       </main>
     </div>

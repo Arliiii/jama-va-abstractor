@@ -50,13 +50,13 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({ steps, classNa
   };
 
   return (
-    <div className={`glass-card border-0 shadow-xl p-8 ${className}`}>
-      <div className="mb-6">
+    <div className={`glass-card border-0 shadow-xl p-8 hover-lift ${className}`}>
+      <div className="mb-6 animate-fade-in">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h3 className="text-xl font-bold text-gradient-blue">
             Processing Progress
           </h3>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 animate-slide-in-right">
             <div className="w-3 h-3 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full animate-pulse"></div>
             <span className="text-sm font-semibold text-blue-600">
               {Math.round(getProgressPercentage())}% Complete
@@ -79,7 +79,7 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({ steps, classNa
         {steps.map((step, index) => (
           <div
             key={step.id}
-            className={`relative flex items-start space-x-4 p-5 rounded-xl border-0 transition-all duration-300 ${getStepColor(step.status)} shadow-sm hover:shadow-md`}
+            className={`stagger-item relative flex items-start space-x-4 p-5 rounded-xl border-0 transition-all duration-300 ${getStepColor(step.status)} shadow-sm hover:shadow-md hover-scale`}
           >
             {/* Connection line */}
             {index < steps.length - 1 && (
@@ -87,11 +87,14 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({ steps, classNa
             )}
             
             <div className="flex-shrink-0 relative">
-              <div className="w-10 h-10 rounded-xl bg-white shadow-md flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-white shadow-md flex items-center justify-center hover-glow">
                 {getStepIcon(step.status)}
               </div>
               {step.status === 'processing' && (
-                <div className="absolute inset-0 rounded-xl bg-blue-400 opacity-20 animate-ping"></div>
+                <>
+                  <div className="absolute inset-0 rounded-xl bg-blue-400 opacity-20 animate-ping"></div>
+                  <div className="absolute inset-0 rounded-xl bg-blue-300 opacity-10 animate-pulse"></div>
+                </>
               )}
             </div>
             
